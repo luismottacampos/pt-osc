@@ -86,6 +86,84 @@ class PtOscAdapterTest < Test::Unit::TestCase
       end
     end
 
+    context '#remove_column' do
+      context 'with no existing commands' do
+        setup do
+          @adapter.instance_variable_set(:@osc_commands, nil)
+        end
+
+        should 'add a DROP COLUMN command to the commands hash' do
+          table_name = Faker::Lorem.word
+          column_name = Faker::Lorem.word
+          @adapter.remove_column(table_name, column_name)
+          assert_equal "DROP COLUMN `#{column_name}`", @adapter.send(:get_commands, table_name).first
+        end
+
+        should 'add multiple DROP COLUMN commands to the commands hash' do
+          table_name = Faker::Lorem.word
+          column_names = 3.times.map { Faker::Lorem.word }
+          @adapter.remove_column(table_name, *column_names)
+          commands = @adapter.send(:get_commands, table_name)
+          column_names.each_with_index do |column_name, index|
+            assert_equal "DROP COLUMN `#{column_name}`", commands[index]
+          end
+        end
+      end
+    end
+
+    context '#add_index' do
+      context 'with no existing commands' do
+        setup do
+          @adapter.instance_variable_set(:@osc_commands, nil)
+        end
+
+        context 'with an existing table and columns' do
+          setup do
+            @table_name = Faker::Lorem.word
+            @column_names = Faker::Lorem.words
+            @adapter.create_table @table_name, force: true do |t|
+              @column_names.each do |column_name|
+                t.string(column_name, default: nil)
+              end
+            end
+          end
+
+          should 'add an ADD INDEX command for one column to the commands hash' do
+            index_name = Faker::Lorem.words.join('_')
+            @adapter.add_index(@table_name, @column_names.first, name: index_name)
+            assert_equal "ADD  INDEX `#{index_name}` (`#{@column_names.first}`)", @adapter.send(:get_commands, @table_name).first
+          end
+
+          should 'add an ADD UNIQUE INDEX command for one column to the commands hash' do
+            index_name = Faker::Lorem.words.join('_')
+            @adapter.add_index(@table_name, @column_names.first, unique: true, name: index_name)
+            assert_equal "ADD UNIQUE INDEX `#{index_name}` (`#{@column_names.first}`)", @adapter.send(:get_commands, @table_name).first
+          end
+
+          should 'add an ADD INDEX command for multiple columns to the commands hash' do
+            index_name = Faker::Lorem.words.join('_')
+            @adapter.add_index(@table_name, @column_names, name: index_name)
+            assert_equal "ADD  INDEX `#{index_name}` (`#{@column_names.join('`, `')}`)", @adapter.send(:get_commands, @table_name).first
+          end
+        end
+      end
+    end
+
+    context '#remove_index!' do
+      context 'with no existing commands' do
+        setup do
+          @adapter.instance_variable_set(:@osc_commands, nil)
+        end
+
+        should 'add a DROP COLUMN command to the commands hash' do
+          table_name = Faker::Lorem.word
+          index_name = Faker::Lorem.word
+          @adapter.remove_index!(table_name, index_name)
+          assert_equal "DROP INDEX `#{index_name}`", @adapter.send(:get_commands, table_name).first
+        end
+      end
+    end
+
     context '#add_command' do
       context 'with no existing commands' do
         setup do
