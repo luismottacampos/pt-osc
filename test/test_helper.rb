@@ -3,6 +3,8 @@ ENV['RAILS_ENV'] = 'test'
 
 require File.expand_path('../dummy/config/environment.rb',  __FILE__)
 require 'test/unit'
+require 'shoulda'
+require 'faker'
 
 Rails.backtrace_cleaner.remove_silencers!
 
