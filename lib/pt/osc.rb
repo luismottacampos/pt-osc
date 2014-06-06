@@ -1,7 +1,3 @@
 require 'pt/osc/version'
-
-module Pt
-  module Osc
-    # Your code goes here...
-  end
-end
+require 'active_record/connection_adapters/pt_osc_adapter'
+require 'active_record/pt_osc_migration'

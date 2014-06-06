@@ -19,3 +19,17 @@ Or install it yourself as:
 ## Usage
 
 Set your database adapter to be `pt_osc` in your application's database.yml.
+Specify `pt-online-schema-change` flags in a `percona` hash in the config.
+e.g.
+```yaml
+environment:
+  host: localhost
+  username: root
+  database: rails
+  percona:
+    defaults-file: /etc/mysql/percona-user.cnf
+    recursion-method: "'dsn=D=percona,t=slaves'"
+```
+
+Additional options for the `percona` hash include:
+  - `run_mode`: Specify `'execute'` to actually run `pt-online-schema-change` when the migration runs. Specify `'print'` to output the commands to run to STDOUT instead. Default is `'print'`.

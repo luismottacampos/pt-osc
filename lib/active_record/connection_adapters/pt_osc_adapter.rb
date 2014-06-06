@@ -104,6 +104,20 @@ module ActiveRecord
         add_command(table_name, "DROP INDEX #{quote_column_name(index_name)}")
       end
 
+      def clear_commands
+        @osc_commands = {}
+      end
+
+      def get_commands_string(table_name)
+        @osc_commands ||= {}
+        @osc_commands[table_name] ||= []
+        @osc_commands[table_name].join(';')
+      end
+
+      def get_commanded_tables
+        @osc_commands.keys
+      end
+
       protected
       def add_command(table_name, command)
         @osc_commands ||= {}
@@ -114,12 +128,6 @@ module ActiveRecord
       def get_commands(table_name)
         @osc_commands ||= {}
         @osc_commands[table_name]
-      end
-
-      def get_commands_string(table_name)
-        @osc_commands ||= {}
-        @osc_commands[table_name] ||= []
-        @osc_commands[table_name].join(';')
       end
     end
   end
