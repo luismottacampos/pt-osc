@@ -140,7 +140,7 @@ module ActiveRecord
 
     def database_config
       # @TODO better way to config?
-      @connection.instance_variable_get(:@config)
+      @connection.instance_variable_get(:@config) || ActiveRecord::Base.connection_config
     end
 
     def percona_config
