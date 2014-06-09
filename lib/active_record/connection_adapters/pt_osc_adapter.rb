@@ -111,7 +111,7 @@ module ActiveRecord
       def get_commands_string(table_name)
         @osc_commands ||= {}
         @osc_commands[table_name] ||= []
-        @osc_commands[table_name].join(';')
+        @osc_commands[table_name].join(',')
       end
 
       def get_commanded_tables
