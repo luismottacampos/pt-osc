@@ -1,11 +1,20 @@
 module ActiveRecord
   class PtOscMigration < Migration
     # @TODO whitelist all valid pt-osc flags
-    DEFAULT_FLAGS = {
-      'defaults-file' => nil,
-      'recursion-method' => nil,
-      'execute' => false,
+    PERCONA_FLAGS = {
+      'defaults-file' => {
+        mutator: :make_path_absolute,
+      },
+      'recursion-method' => {
+      },
+      'execute' => {
+        default: false,
+      },
     }.freeze
+
+    def self.percona_flags
+      PERCONA_FLAGS
+    end
 
     def migrate(direction)
       return unless respond_to?(direction)
@@ -113,25 +122,26 @@ module ActiveRecord
 
       # Whitelist
       options = HashWithIndifferentAccess.new(options)
-      options = options.slice(*DEFAULT_FLAGS.keys)
+      options = options.slice(*self.class.percona_flags.keys)
 
       # Merge config
       config = percona_config
       if config
-        config.slice(*DEFAULT_FLAGS.keys).each do |key, value|
+        config.slice(*self.class.percona_flags.keys).each do |key, value|
           options[key] ||= value
         end
       end
 
       # Set defaults
-      DEFAULT_FLAGS.each do |key, value|
-        options[key] ||= value unless value.nil?
+      self.class.percona_flags.each do |flag, flag_config|
+        options[flag] ||= flag_config[:default] if flag_config.key?(:default)
       end
 
       # Determine run mode
       command += options.delete(:execute) ? ' --execute' : ' --dry-run'
 
       options.each do |key, value|
+        value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
         command += " --#{key} #{value}"
       end
 
@@ -145,6 +155,14 @@ module ActiveRecord
 
     def percona_config
       database_config[:percona] || {}
+    end
+
+    private
+    # Flag mutators
+    def make_path_absolute(path)
+      return path if path[0] == '/'
+      # If path is not already absolute, treat it as relative to the app root
+      File.expand_path(path, Dir.getwd)
     end
   end
 end
