@@ -144,7 +144,7 @@ module ActiveRecord
     end
 
     def percona_config
-      database_config[:percona]
+      database_config[:percona] || {}
     end
   end
 end
