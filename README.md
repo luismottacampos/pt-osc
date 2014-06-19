@@ -39,6 +39,7 @@ environment:
 Additional/modified options for the `percona` hash include:
   - `defaults-file`: Can be specified as an absolute path (with leading `/`) or relative (without). Relative paths will be treated as relative to your project's working directory.
   - `run_mode`: Specify `'execute'` to actually run `pt-online-schema-change` when the migration runs. Specify `'print'` to output the commands to run to STDOUT instead. Default is `'print'`.
+  - `log`: Specify the file used for logging activity. Can be a relative or absolute path.
 
 ## Caveats
 

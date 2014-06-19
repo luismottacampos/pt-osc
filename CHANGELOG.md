@@ -1,3 +1,8 @@
+## 0.0.5
+
+- remove dependence on ActiveSupport/Rails
+- can specify log file in `percona` config
+
 ## 0.0.4
 
 - Make sure `active_record/migration` is `require`d

@@ -71,33 +71,36 @@ module ActiveRecord
     protected
     def execute_pt_osc
       return unless @connection.is_a? ActiveRecord::ConnectionAdapters::PtOscAdapter
+      return if @connection.get_commanded_tables.empty?
 
-      @connection.get_commanded_tables.each do |table_name|
-        execute_sql = @connection.get_commands_string(table_name)
+      database_name = database_config[:database]
+      announce 'running pt-online-schema-change'
 
-        Rails.logger.tagged('pt-osc') do |logger|
-
-          database_name = database_config[:database]
-
-          logger.info "Running on #{database_name}|#{table_name}: #{execute_sql}"
-          announce 'running pt-online-schema-change'
-
-          [true, false].each do |dry_run|
-            command = percona_command(execute_sql, database_name, table_name, execute: !dry_run)
-            logger.info "Command is #{command}"
-            success = Kernel.system command
-            if success
-              logger.info "Successfully #{dry_run ? 'dry ran' : 'executed'} on #{database_name}|#{table_name}: #{execute_sql}"
-            else
-              failure_message = "Unable to #{dry_run ? 'dry run' : 'execute'} query on #{database_name}|#{table_name}: #{execute_sql}"
-              logger.error failure_message
-              raise RuntimeError.new(failure_message)
-            end
-          end
-        end
-      end
-
+      @connection.get_commanded_tables.each { |table| migrate_table(database_name, table) }
       @connection.clear_commands
+    end
+
+    def migrate_table(database_name, table_name)
+      execute_sql = @connection.get_commands_string(table_name)
+
+      logger.info "Running on #{database_name}|#{table_name}: #{execute_sql}"
+
+      [true, false].each { |dry_run| execute_sql_for_table(execute_sql, database_name, table_name, dry_run) }
+    end
+
+    def execute_sql_for_table(execute_sql, database_name, table_name, dry_run = true)
+      command = percona_command(execute_sql, database_name, table_name, execute: !dry_run)
+      logger.info "Command is #{command}"
+
+      success = Kernel.system command
+
+      if success
+        logger.info "Successfully #{dry_run ? 'dry ran' : 'executed'} on #{database_name}|#{table_name}: #{execute_sql}"
+      else
+        failure_message = "Unable to #{dry_run ? 'dry run' : 'execute'} query on #{database_name}|#{table_name}: #{execute_sql}"
+        logger.error failure_message
+        raise RuntimeError.new(failure_message)
+      end
     end
 
     def print_pt_osc
@@ -157,6 +160,18 @@ module ActiveRecord
 
     def percona_config
       database_config[:percona] || {}
+    end
+
+    def logfile
+      File.open(make_path_absolute(percona_config[:log] || 'log/pt_osc.log'), 'a')
+    end
+
+    def logger
+      return @logger if @logger
+      @logger = Logger.new(logfile)
+      @logger.formatter = Logger::Formatter.new # Don't let ActiveSupport override with SimpleFormatter
+      @logger.progname = 'pt-osc'
+      @logger
     end
 
     private

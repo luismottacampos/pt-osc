@@ -191,6 +191,25 @@ class PtOscAdapterTest < Test::Unit::TestCase
           assert_nil @adapter.send(:get_commands, table_name)
         end
       end
+
+      context 'with existing commands' do
+        setup do
+          @commands_hash = 3.times.inject({}) do |hash|
+            hash[Faker::Lorem.word] = [Faker::Lorem.sentence]
+            hash
+          end
+          @adapter.instance_variable_set(:@osc_commands, @commands_hash)
+        end
+
+        should 'return the entire commands hash when no table is given' do
+          assert_equal @commands_hash, @adapter.send(:get_commands)
+        end
+
+        should "return only the given table's command array" do
+          table = @commands_hash.keys.first
+          assert_equal @commands_hash[table], @adapter.send(:get_commands, table)
+        end
+      end
     end
 
     context '#get_commands_string' do
