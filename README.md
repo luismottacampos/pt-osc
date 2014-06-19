@@ -1,6 +1,7 @@
 [![Travis CI](https://travis-ci.org/steverice/pt-osc.svg)](https://travis-ci.org/steverice/pt-osc)
 [![Code Climate](https://codeclimate.com/github/steverice/pt-osc.png)](https://codeclimate.com/github/steverice/pt-osc)
 [![Code Coverage](https://codeclimate.com/github/steverice/pt-osc/coverage.png)](https://codeclimate.com/github/steverice/pt-osc)
+[![Gem Version](https://badge.fury.io/rb/pt-osc.svg)](http://badge.fury.io/rb/pt-osc)
 
 ## `pt-online-schema-change` migrations
 
