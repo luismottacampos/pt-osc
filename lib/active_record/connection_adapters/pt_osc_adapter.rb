@@ -109,25 +109,23 @@ module ActiveRecord
       end
 
       def get_commands_string(table_name)
-        @osc_commands ||= {}
-        @osc_commands[table_name] ||= []
-        @osc_commands[table_name].join(',')
+        get_commands[table_name] ||= []
+        get_commands[table_name].join(',')
       end
 
       def get_commanded_tables
-        @osc_commands.keys
+        get_commands.keys
       end
 
       protected
       def add_command(table_name, command)
-        @osc_commands ||= {}
-        @osc_commands[table_name] ||= []
-        @osc_commands[table_name] << command
+        get_commands[table_name] ||= []
+        get_commands[table_name] << command
       end
 
-      def get_commands(table_name)
+      def get_commands(table_name = nil)
         @osc_commands ||= {}
-        @osc_commands[table_name]
+        table_name.nil? ? @osc_commands : @osc_commands[table_name]
       end
     end
   end
