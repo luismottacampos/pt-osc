@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Make sure `active_record/migration` is `require`d
+
 ## 0.0.3
 
 - `defaults-file` flag can be specified as either an absolute path (has a leading `/`) or a relative path.

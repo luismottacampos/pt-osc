@@ -1,3 +1,5 @@
+require 'active_record/migration'
+
 module ActiveRecord
   class PtOscMigration < Migration
     # @TODO whitelist all valid pt-osc flags
