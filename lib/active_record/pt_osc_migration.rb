@@ -70,7 +70,7 @@ module ActiveRecord
 
     protected
     def execute_pt_osc
-      return unless @connection.is_a? ActiveRecord::ConnectionAdapters::PtOscAdapter
+      return unless @connection.is_a? ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter
       return if @connection.get_commanded_tables.empty?
 
       database_name = database_config[:database]
@@ -104,7 +104,7 @@ module ActiveRecord
     end
 
     def print_pt_osc
-      return unless @connection.is_a? ActiveRecord::ConnectionAdapters::PtOscAdapter
+      return unless @connection.is_a? ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter
 
       database_name = database_config[:database]
 

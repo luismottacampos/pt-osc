@@ -23,7 +23,7 @@ Or install it yourself as:
 
 ## Usage
 
-Set your database adapter to be `pt_osc` in your application's database.yml.
+Set your database adapter to be `mysql_pt_osc` in your application's database.yml.
 Specify `pt-online-schema-change` flags in a `percona` hash in the config.
 e.g.
 ```yaml

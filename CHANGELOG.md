@@ -1,3 +1,7 @@
+## 0.1.0
+
+- renamed `PtOscAdapter` -> `MysqlPtOscAdapter` for better compatibility with Rails db Rake tasks.
+
 ## 0.0.5
 
 - remove dependence on ActiveSupport/Rails
