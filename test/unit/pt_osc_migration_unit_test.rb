@@ -104,7 +104,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
       context 'with a pt-osc connection' do
         setup do
           @mock_connection = mock
-          @mock_connection.stubs(:is_a?).with(ActiveRecord::ConnectionAdapters::PtOscAdapter).returns(true)
+          @mock_connection.stubs(:is_a?).with(ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter).returns(true)
 
           @old_connection = @migration.instance_variable_get(:@connection)
           @migration.instance_variable_set(:@connection, @mock_connection)

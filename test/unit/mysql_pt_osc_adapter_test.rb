@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PtOscAdapterTest < Test::Unit::TestCase
+class MysqlPtOscAdapterTest < Test::Unit::TestCase
   class TestConnection < ActiveRecord::Base; end
 
   context 'a pt-osc adapter' do

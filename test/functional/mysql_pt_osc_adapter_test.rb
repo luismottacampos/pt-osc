@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'yaml'
 
-class PtOscAdapterTest < Test::Unit::TestCase
+class MysqlPtOscAdapterTest < Test::Unit::TestCase
   class TestConnection < ActiveRecord::Base; end
 
   def test_connection
@@ -11,6 +11,6 @@ class PtOscAdapterTest < Test::Unit::TestCase
 
     assert_nothing_raised { TestConnection.establish_connection(spec) }
     assert_equal true, TestConnection.connection.in_use
-    assert_kind_of ActiveRecord::ConnectionAdapters::PtOscAdapter, TestConnection.connection
+    assert_kind_of ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter, TestConnection.connection
   end
 end
