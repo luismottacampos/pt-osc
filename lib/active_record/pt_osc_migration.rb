@@ -1,4 +1,5 @@
 require 'active_record/migration'
+require 'active_record/connection_adapters/mysql_pt_osc_adapter'
 
 module ActiveRecord
   class PtOscMigration < Migration
