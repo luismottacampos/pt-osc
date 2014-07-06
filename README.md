@@ -46,6 +46,7 @@ Additional/modified options for the `percona` hash include:
 This gem is not considered production ready. There will be bugs.
 It is tested against:
 - ActiveRecord 3.2 branch
+  - Ruby 1.9.2
   - Ruby 1.9.3
   - Ruby 2.0.0
   - Ruby 2.1.2
