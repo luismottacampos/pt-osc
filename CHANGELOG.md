@@ -1,3 +1,8 @@
+## 0.1.1
+
+- now compatible with versions 0.5.0 and later of [zdennis/activerecord-import](https://github.com/zdennis/activerecord-import)
+- fixed `LoadError` in `ActiveRecord::PtOscMigration`
+
 ## 0.1.0
 
 - renamed `PtOscAdapter` -> `MysqlPtOscAdapter` for better compatibility with Rails db Rake tasks.
