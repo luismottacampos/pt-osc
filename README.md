@@ -44,10 +44,16 @@ Additional/modified options for the `percona` hash include:
 ## Caveats
 
 This gem is not considered production ready. There will be bugs.
-It is tested against:
+
+##### Compatibility
+
+`pt-osc` is tested against:
 - ActiveRecord 3.2 branch
   - Ruby 1.9.2
+  - Ruby 1.9.3
   - Ruby 2.0.0
   - Ruby 2.1.2
 
 Support for other versions of Ruby or ActiveRecord is unknown and not guaranteed.
+
+`pt-osc` is compatible with versions 0.5.0 and later of [zdennis/activerecord-import](https://github.com/zdennis/activerecord-import). It will not work with earlier versions.

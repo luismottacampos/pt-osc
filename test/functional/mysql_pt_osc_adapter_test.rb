@@ -13,4 +13,9 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
     assert_equal true, TestConnection.connection.in_use
     assert_kind_of ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter, TestConnection.connection
   end
+
+  def test_activerecord_import_compatibility
+    # Test that the adapter can be loaded when using the activerecord-import gem
+    assert_nothing_raised { require 'activerecord-import' }
+  end
 end

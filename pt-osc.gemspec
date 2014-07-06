@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
   # For testing using dummy Rails app
   spec.add_development_dependency 'rails', '~> 3.2'
   spec.add_development_dependency 'sqlite3'
+  spec.add_development_dependency 'activerecord-import', '~> 0.5.0'
 
   spec.add_runtime_dependency 'activerecord', '~> 3.2'
   spec.add_runtime_dependency 'mysql2'
