@@ -1,3 +1,7 @@
+## 0.1.2
+
+- report `adapter_name` as `mysql2` for compatibility with gems that check it (e.g. [mceachen/with_advisory_lock](https://github.com/mceachen/with_advisory_lock))
+
 ## 0.1.1
 
 - now compatible with versions 0.5.0 and later of [zdennis/activerecord-import](https://github.com/zdennis/activerecord-import)

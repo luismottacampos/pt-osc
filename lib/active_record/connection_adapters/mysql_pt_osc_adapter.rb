@@ -20,6 +20,10 @@ module ActiveRecord
     class MysqlPtOscAdapter < Mysql2Adapter
       ADAPTER_NAME = 'mysql-pt-osc'
 
+      def adapter_name
+        'mysql2' # For compatibility with code that check adapter name
+      end
+
       # Renames a table.
       #
       # Example:
