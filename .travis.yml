@@ -7,6 +7,7 @@ rvm:
   - 1.9.3
   - 2.0.0
   - 2.1.2
+  - 2.1
 env:
   - CODECLIMATE_REPO_TOKEN=0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
 cache:

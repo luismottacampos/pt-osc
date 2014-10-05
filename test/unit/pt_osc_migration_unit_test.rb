@@ -9,8 +9,13 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
     context '#percona_command' do
       context 'connected to a pt-osc database' do
         setup do
+          @old_connection = @migration.instance_variable_get(:@connection)
           ActiveRecord::Base.establish_connection(test_spec)
           @migration.instance_variable_set(:@connection, ActiveRecord::Base.connection)
+        end
+
+        teardown do
+          @migration.instance_variable_set(:@connection, @old_connection)
         end
 
         should 'only include flags in PERCONA_FLAGS' do
@@ -74,6 +79,94 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
             @migration.expects(:make_path_absolute).with(@path)
             @migration.send(:percona_command, '', '', '', @options)
           end
+        end
+      end
+
+      context 'connected to a pt-osc database in print mode' do
+        setup do
+          @old_connection = @migration.instance_variable_get(:@connection)
+          ActiveRecord::Base.establish_connection(test_spec('test_print'))
+          @migration.instance_variable_set(:@connection, ActiveRecord::Base.connection)
+        end
+
+        teardown do
+          @migration.instance_variable_set(:@connection, @old_connection)
+        end
+
+        should 'have print as the run_mode' do
+          assert_equal 'print', @migration.send(:percona_config)[:run_mode]
+        end
+
+        should 'call print_pt_osc' do
+          @migration.expects(:print_pt_osc).once.returns(nil)
+          @migration.expects(:execute_pt_osc).never
+          @migration.migrate(:up)
+        end
+      end
+
+      context 'connected to a pt-osc database in print mode as string' do
+        setup do
+          @old_connection = @migration.instance_variable_get(:@connection)
+          ActiveRecord::Base.establish_connection(test_spec('test_print_string'))
+          @migration.instance_variable_set(:@connection, ActiveRecord::Base.connection)
+        end
+
+        teardown do
+          @migration.instance_variable_set(:@connection, @old_connection)
+        end
+
+        should 'have print as the run_mode' do
+          assert_equal 'print', @migration.send(:percona_config)[:run_mode]
+        end
+
+        should 'call print_pt_osc' do
+          @migration.expects(:print_pt_osc).once.returns(nil)
+          @migration.expects(:execute_pt_osc).never
+          @migration.migrate(:up)
+        end
+      end
+
+      context 'connected to a pt-osc database in execute mode' do
+        setup do
+          @old_connection = @migration.instance_variable_get(:@connection)
+          ActiveRecord::Base.establish_connection(test_spec('test_execute'))
+          @migration.instance_variable_set(:@connection, ActiveRecord::Base.connection)
+        end
+
+        teardown do
+          @migration.instance_variable_set(:@connection, @old_connection)
+        end
+
+        should 'have execute as the run_mode' do
+          assert_equal 'execute', @migration.send(:percona_config)[:run_mode]
+        end
+
+        should 'call execute_pt_osc' do
+          @migration.expects(:execute_pt_osc).once.returns(nil)
+          @migration.expects(:print_pt_osc).never
+          @migration.migrate(:up)
+        end
+      end
+
+      context 'connected to a pt-osc database in execute mode as string' do
+        setup do
+          @old_connection = @migration.instance_variable_get(:@connection)
+          ActiveRecord::Base.establish_connection(test_spec('test_execute_string'))
+          @migration.instance_variable_set(:@connection, ActiveRecord::Base.connection)
+        end
+
+        teardown do
+          @migration.instance_variable_set(:@connection, @old_connection)
+        end
+
+        should 'have execute as the run_mode' do
+          assert_equal 'execute', @migration.send(:percona_config)[:run_mode]
+        end
+
+        should 'call execute_pt_osc' do
+          @migration.expects(:execute_pt_osc).once.returns(nil)
+          @migration.expects(:print_pt_osc).never
+          @migration.migrate(:up)
         end
       end
     end

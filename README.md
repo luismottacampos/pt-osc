@@ -53,6 +53,7 @@ This gem is not considered production ready. There will be bugs.
   - Ruby 1.9.3
   - Ruby 2.0.0
   - Ruby 2.1.2
+  - Ruby 2.1 latest
 
 Support for other versions of Ruby or ActiveRecord is unknown and not guaranteed.
 

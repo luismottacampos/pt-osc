@@ -1,3 +1,8 @@
+## 0.1.3
+
+- fix for loading percona config
+- added test coverage for loading run_mode from config
+
 ## 0.1.2
 
 - report `adapter_name` as `mysql2` for compatibility with gems that check it (e.g. [mceachen/with_advisory_lock](https://github.com/mceachen/with_advisory_lock))

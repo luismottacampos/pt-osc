@@ -1,6 +1,26 @@
-test:
+test: &test
   pool: 5
   host: localhost
   username: root
   database: pt_osc_test
   reconnect: true
+
+test_print:
+  <<: *test
+  percona:
+    run_mode: print
+
+test_execute:
+  <<: *test
+  percona:
+    run_mode: execute
+
+test_print_string:
+  <<: *test
+  percona:
+    run_mode: 'print'
+
+test_execute_string:
+  <<: *test
+  percona:
+    run_mode: 'execute'
