@@ -12,8 +12,8 @@ require 'mocha'
 
 Rails.backtrace_cleaner.remove_silencers!
 
-def test_spec
-  test_spec = YAML.load_file(Rails.root.join(*%w(.. config database.yml)))['test']
+def test_spec(key = 'test')
+  test_spec = YAML.load_file(Rails.root.join(*%w(.. config database.yml)))[key]
   test_spec['adapter'] = 'mysql_pt_osc'
   test_spec
 end
