@@ -41,6 +41,18 @@ Additional/modified options for the `percona` hash include:
   - `run_mode`: Specify `'execute'` to actually run `pt-online-schema-change` when the migration runs. Specify `'print'` to output the commands to run to STDOUT instead. Default is `'print'`.
   - `log`: Specify the file used for logging activity. Can be a relative or absolute path.
 
+#### Migrations
+
+To run migrations with `pt-online-schema-change`, you need to explicitly opt them in by changing their parent class to `ActiveRecord::PtOscMigration`. For instance, if your migration was
+```ruby
+class CreateTeams < ActiveRecord::Migration
+```
+you should change it to
+```ruby
+class CreateTeams < ActiveRecord::PtOscMigration
+```
+If you have migrations that you do not want to be run with `pt-online-schema-change`, leave the same parent class and they will be run normally.
+
 ## Caveats
 
 This gem is not considered production ready. There will be bugs.
