@@ -154,7 +154,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           end
 
           should 'call #make_path_absolute' do
-            @migration.expects(:make_path_absolute).with(@path)
+            @migration.expects(:make_path_absolute).with(@path, anything)
             @migration.send(:percona_command, '', '', '', @options)
           end
         end

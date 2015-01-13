@@ -182,7 +182,9 @@ module ActiveRecord
         end
 
         # Mutate the value if needed
-        value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
+        if flag_options.try(:key?, :mutator)
+          value = send(flag_options[:mutator], value, all_options: options, flag_name: key)
+        end
 
         # Handle boolean flags
         if flag_options.try(:[], :boolean)
@@ -203,7 +205,7 @@ module ActiveRecord
     end
 
     # Flag mutators
-    def make_path_absolute(path)
+    def make_path_absolute(path, _ = {})
       return path if path[0] == '/'
       # If path is not already absolute, treat it as relative to the app root
       File.expand_path(path, Dir.getwd)
