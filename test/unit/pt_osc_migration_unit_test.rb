@@ -58,6 +58,49 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           end
         end
 
+        context 'with flags having version requirements' do
+          setup do
+            flags = ActiveRecord::PtOscMigration.percona_flags.merge({ 'flag-with-requirement' => { version: '> 2.0' } })
+            ActiveRecord::PtOscMigration.stubs(:percona_flags).returns(flags)
+          end
+
+          teardown do
+            ActiveRecord::PtOscMigration.unstub(:percona_flags)
+          end
+
+          context 'with matching tool version' do
+            setup do
+              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('2.6.40'))
+            end
+
+            teardown do
+              ActiveRecord::PtOscMigration.unstub(:tool_version)
+            end
+
+            should 'contain the flag in the output' do
+              command = @migration.send(:percona_command, '', '', '', 'flag-with-requirement' => 'foobar')
+              assert command.include?('--flag-with-requirement foobar'),
+                     "Flag was not included in command '#{command}' despite meeting version requirement."
+            end
+          end
+
+          context 'with non-matching tool version' do
+            setup do
+              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('1.12'))
+            end
+
+            teardown do
+              ActiveRecord::PtOscMigration.unstub(:tool_version)
+            end
+
+            should 'not contain the flag in the output' do
+              command = @migration.send(:percona_command, '', '', '', 'flag-with-requirement' => 'foobar')
+              assert_equal false, command.include?('--flag-with-requirement'),
+                           "Flag was included in command '#{command}' despite not meeting version requirement."
+            end
+          end
+        end
+
         should 'perform a dry run if execute not specified' do
           command = @migration.send(:percona_command, '', '', '')
           assert command.include?('--dry-run')
@@ -167,6 +210,23 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           @migration.expects(:execute_pt_osc).once.returns(nil)
           @migration.expects(:print_pt_osc).never
           @migration.migrate(:up)
+        end
+      end
+    end
+
+    context '#tool_version' do
+      context 'with known tool version' do
+        setup do
+          ActiveRecord::PtOscMigration.stubs(:get_tool_version).returns('pt-online-schema-change 2.2.7')
+        end
+
+        teardown do
+          ActiveRecord::PtOscMigration.unstub(:get_tool_version)
+        end
+
+        should 'return a Gem::Version with the expected value' do
+          assert_instance_of Gem::Version, ActiveRecord::PtOscMigration.send(:tool_version)
+          assert_equal '2.2.7', ActiveRecord::PtOscMigration.send(:tool_version).version
         end
       end
     end

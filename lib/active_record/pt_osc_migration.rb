@@ -9,6 +9,7 @@ module ActiveRecord
         mutator: :make_path_absolute,
       },
       'recursion-method' => {
+        version: '>= 2.1',
       },
       'execute' => {
         default: false,
@@ -147,11 +148,24 @@ module ActiveRecord
       command += options.delete(:execute) ? ' --execute' : ' --dry-run'
 
       options.each do |key, value|
+        flag_options = self.class.percona_flags[key]
+
+        # Satisfy version requirements
+        if flag_options.try(:key?, :version)
+          next unless Gem::Requirement.new(flag_options[:version]).satisfied_by? self.class.tool_version
+        end
+
+        # Mutate the value if needed
         value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
+
         command += " --#{key} #{value}"
       end
 
       command
+    end
+
+    def self.tool_version
+      @_tool_version ||= Gem::Version.new(get_tool_version.sub('pt-online-schema-change', '').strip)
     end
 
     def database_config
@@ -175,6 +189,10 @@ module ActiveRecord
     end
 
     private
+    def self.get_tool_version
+      `pt-online-schema-change --version`
+    end
+
     # Flag mutators
     def make_path_absolute(path)
       return path if path[0] == '/'

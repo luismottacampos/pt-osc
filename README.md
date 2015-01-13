@@ -68,6 +68,8 @@ This gem is not considered production ready. There will be bugs.
 
 Support for other versions of Ruby or ActiveRecord is unknown and not guaranteed.
 
+`pt-osc` requires the use of `pt-online-schema-change` 2.0 or later. Some options may not work with all versions.
+
 `pt-osc` is compatible with versions 0.5.0 and later of [zdennis/activerecord-import](https://github.com/zdennis/activerecord-import). It will not work with earlier versions.
 
 #License and Copyright
