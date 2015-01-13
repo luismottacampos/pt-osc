@@ -101,6 +101,27 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           end
         end
 
+        context 'with boolean flags' do
+          setup do
+            flags = ActiveRecord::PtOscMigration.percona_flags.merge({ 'boolean-flag' => { boolean: true } })
+            ActiveRecord::PtOscMigration.stubs(:percona_flags).returns(flags)
+          end
+
+          teardown do
+            ActiveRecord::PtOscMigration.unstub(:percona_flags)
+          end
+
+          should 'include just the flag (no value) when true' do
+            command = @migration.send(:percona_command, '', '', '', 'boolean-flag' => true)
+            assert command =~ /\-\-boolean\-flag\s*$/, "Boolean flag was malformed in command '#{command}'."
+          end
+
+          should 'include a "no" version of the flag when false' do
+            command = @migration.send(:percona_command, '', '', '', 'boolean-flag' => false)
+            assert command =~ /\-\-no\-boolean\-flag\s*$/, "Boolean flag was malformed in command '#{command}'."
+          end
+        end
+
         should 'perform a dry run if execute not specified' do
           command = @migration.send(:percona_command, '', '', '')
           assert command.include?('--dry-run')

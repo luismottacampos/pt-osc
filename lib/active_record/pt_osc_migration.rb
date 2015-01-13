@@ -141,7 +141,7 @@ module ActiveRecord
 
       # Set defaults
       self.class.percona_flags.each do |flag, flag_config|
-        options[flag] ||= flag_config[:default] if flag_config.key?(:default)
+        options[flag] = flag_config[:default] if flag_config.key?(:default) && !options.key?(flag)
       end
 
       # Determine run mode
@@ -157,6 +157,12 @@ module ActiveRecord
 
         # Mutate the value if needed
         value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
+
+        # Handle boolean flags
+        if flag_options.try(:[], :boolean)
+          key = "no-#{key}" unless value
+          value = nil
+        end
 
         command += " --#{key} #{value}"
       end
