@@ -53,7 +53,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
           should 'set missing flags to default values' do
             flags_with_defaults = ActiveRecord::PtOscMigration.percona_flags.select do |flag, config|
-              config.key?(:default) && flag != 'execute'
+              config.key?(:default) && flag != 'execute' && !config[:boolean]
             end
 
             command = @migration.send(:percona_command, '', '', '')
@@ -123,12 +123,16 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
           should 'include just the flag (no value) when true' do
             command = @migration.send(:percona_command, '', '', '', 'boolean-flag' => true)
-            assert command =~ /\-\-boolean\-flag\s*$/, "Boolean flag was malformed in command '#{command}'."
+            matches_eof = command =~ /\-\-boolean\-flag\s*$/
+            matches_middle = command =~ /\-\-boolean\-flag\s*\-\-/
+            assert matches_eof || matches_middle, "Boolean flag was malformed in command '#{command}'."
           end
 
           should 'include a "no" version of the flag when false' do
             command = @migration.send(:percona_command, '', '', '', 'boolean-flag' => false)
-            assert command =~ /\-\-no\-boolean\-flag\s*$/, "Boolean flag was malformed in command '#{command}'."
+            matches_eof = command =~ /\-\-no\-boolean\-flag\s*$/
+            matches_middle = command =~ /\-\-no\-boolean\-flag\s*\-\-/
+            assert matches_eof || matches_middle, "Boolean flag was malformed in command '#{command}'."
           end
         end
 
