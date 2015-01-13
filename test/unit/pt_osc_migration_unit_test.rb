@@ -271,6 +271,24 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
       end
     end
 
+    context '#execute_only' do
+      should 'return the default flag value during a dry run' do
+        ActiveRecord::PtOscMigration.stubs(:percona_flags).returns('foo' => { default: 'bar' })
+        assert_equal 'bar', @migration.send(:execute_only, 'baz', all_options: { execute: false }, flag_name: 'foo')
+        ActiveRecord::PtOscMigration.unstub(:percona_flags)
+      end
+
+      should 'return nil during a dry run if there is no default value' do
+        ActiveRecord::PtOscMigration.stubs(:percona_flags).returns('foo' => {})
+        assert_nil @migration.send(:execute_only, 'baz', all_options: { execute: false }, flag_name: 'foo')
+        ActiveRecord::PtOscMigration.unstub(:percona_flags)
+      end
+
+      should 'pass the flag through when executing' do
+        assert_equal 'baz', @migration.send(:execute_only, 'baz', all_options: { execute: true }, flag_name: 'foo')
+      end
+    end
+
     context '#execute_pt_osc' do
       context 'with a pt-osc connection' do
         setup do

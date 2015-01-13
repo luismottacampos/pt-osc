@@ -174,6 +174,7 @@ module ActiveRecord
     private
     def command_flags(options)
       options.map do |key, value|
+        next if key == 'execute'
         flag_options = self.class.percona_flags[key]
 
         # Satisfy version requirements
@@ -197,7 +198,7 @@ module ActiveRecord
     end
 
     def run_mode_flag(options)
-      options.delete(:execute) ? ' --execute' : ' --dry-run'
+      options[:execute] ? ' --execute' : ' --dry-run'
     end
 
     def self.get_tool_version
@@ -209,6 +210,10 @@ module ActiveRecord
       return path if path[0] == '/'
       # If path is not already absolute, treat it as relative to the app root
       File.expand_path(path, Dir.getwd)
+    end
+
+    def execute_only(flag, options = {})
+      options[:all_options][:execute] ? flag : self.class.percona_flags[options[:flag_name]][:default]
     end
   end
 end
