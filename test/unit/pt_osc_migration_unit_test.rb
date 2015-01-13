@@ -4,6 +4,12 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
   context 'with a pt-osc migration' do
     setup do
       @migration = ActiveRecord::PtOscMigration.new
+      @tool_version = states('tool_version').starts_as('100')
+      ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('100')).when(@tool_version.is('100'))
+    end
+
+    teardown do
+      ActiveRecord::PtOscMigration.unstub(:tool_version)
     end
 
     context '#percona_command' do
@@ -70,11 +76,13 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
           context 'with matching tool version' do
             setup do
-              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('2.6.40'))
+              @old_tool_version = @tool_version.current_state
+              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('2.6.40')).when(@tool_version.is('2.6.40'))
+              @tool_version.become('2.6.40')
             end
 
             teardown do
-              ActiveRecord::PtOscMigration.unstub(:tool_version)
+              @tool_version.become(@old_tool_version)
             end
 
             should 'contain the flag in the output' do
@@ -86,11 +94,13 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
           context 'with non-matching tool version' do
             setup do
-              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('1.12'))
+              @old_tool_version = @tool_version.current_state
+              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('1.12')).when(@tool_version.is('1.12'))
+              @tool_version.become('1.12')
             end
 
             teardown do
-              ActiveRecord::PtOscMigration.unstub(:tool_version)
+              @tool_version.become(@old_tool_version)
             end
 
             should 'not contain the flag in the output' do
@@ -231,23 +241,6 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           @migration.expects(:execute_pt_osc).once.returns(nil)
           @migration.expects(:print_pt_osc).never
           @migration.migrate(:up)
-        end
-      end
-    end
-
-    context '#tool_version' do
-      context 'with known tool version' do
-        setup do
-          ActiveRecord::PtOscMigration.stubs(:get_tool_version).returns('pt-online-schema-change 2.2.7')
-        end
-
-        teardown do
-          ActiveRecord::PtOscMigration.unstub(:get_tool_version)
-        end
-
-        should 'return a Gem::Version with the expected value' do
-          assert_instance_of Gem::Version, ActiveRecord::PtOscMigration.send(:tool_version)
-          assert_equal '2.2.7', ActiveRecord::PtOscMigration.send(:tool_version).version
         end
       end
     end
@@ -503,6 +496,23 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           logfile = @migration.send(:logfile)
           assert 'log/fakelog.file'.in?(logfile.path), 'Configured log file not found in path'
         end
+      end
+    end
+  end
+
+  context '#tool_version' do
+    context 'with known tool version' do
+      setup do
+        ActiveRecord::PtOscMigration.stubs(:get_tool_version).returns('pt-online-schema-change 2.2.7')
+      end
+
+      teardown do
+        ActiveRecord::PtOscMigration.unstub(:get_tool_version)
+      end
+
+      should 'return a Gem::Version with the expected value' do
+        assert_instance_of Gem::Version, ActiveRecord::PtOscMigration.send(:tool_version)
+        assert_equal '2.2.7', ActiveRecord::PtOscMigration.send(:tool_version).version
       end
     end
   end

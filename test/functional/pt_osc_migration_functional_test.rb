@@ -8,6 +8,11 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
       ActiveRecord::Base.establish_connection(test_spec)
       @migration = TestMigration.new
       @migration.instance_variable_set(:@connection, ActiveRecord::Base.connection)
+      ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('100'))
+    end
+
+    teardown do
+      ActiveRecord::PtOscMigration.unstub(:tool_version)
     end
 
     context 'on an existing table with an existing column' do
