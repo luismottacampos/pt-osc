@@ -14,6 +14,12 @@ module ActiveRecord
       'execute' => {
         default: false,
       },
+      'check-alter' => {
+        boolean: true,
+        default: true,
+        mutator: :execute_only,
+        version: '>= 2.1',
+      }
     }.freeze
 
     def self.percona_flags
