@@ -1,3 +1,9 @@
+## 0.2.0
+
+- support for setting the [`--check-alter` flag](http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html#cmdoption-pt-online-schema-change--%5Bno%5Dcheck-alter)
+- internal improvements to the way `percona` options are handled
+- removed support for Ruby 1.9.2
+
 ## 0.1.3
 
 - fix for loading percona config
