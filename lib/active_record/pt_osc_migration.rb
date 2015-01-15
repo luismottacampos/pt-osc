@@ -144,30 +144,7 @@ module ActiveRecord
         options[flag] = flag_config[:default] if flag_config.key?(:default) && !options.key?(flag)
       end
 
-      # Determine run mode
-      command += options.delete(:execute) ? ' --execute' : ' --dry-run'
-
-      options.each do |key, value|
-        flag_options = self.class.percona_flags[key]
-
-        # Satisfy version requirements
-        if flag_options.try(:key?, :version)
-          next unless Gem::Requirement.new(flag_options[:version]).satisfied_by? self.class.tool_version
-        end
-
-        # Mutate the value if needed
-        value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
-
-        # Handle boolean flags
-        if flag_options.try(:[], :boolean)
-          key = "no-#{key}" unless value
-          value = nil
-        end
-
-        command += " --#{key} #{value}"
-      end
-
-      command
+      "#{command}#{run_mode_flag(options)}#{command_flags(options)}"
     end
 
     def self.tool_version
@@ -195,6 +172,32 @@ module ActiveRecord
     end
 
     private
+    def command_flags(options)
+      options.map do |key, value|
+        flag_options = self.class.percona_flags[key]
+
+        # Satisfy version requirements
+        if flag_options.try(:key?, :version)
+          next unless Gem::Requirement.new(flag_options[:version]).satisfied_by? self.class.tool_version
+        end
+
+        # Mutate the value if needed
+        value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
+
+        # Handle boolean flags
+        if flag_options.try(:[], :boolean)
+          key = "no-#{key}" unless value
+          value = nil
+        end
+
+        " --#{key} #{value}"
+      end.join('')
+    end
+
+    def run_mode_flag(options)
+      options.delete(:execute) ? ' --execute' : ' --dry-run'
+    end
+
     def self.get_tool_version
       `pt-online-schema-change --version`
     end
