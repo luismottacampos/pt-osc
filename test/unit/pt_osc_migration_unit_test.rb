@@ -4,6 +4,12 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
   context 'with a pt-osc migration' do
     setup do
       @migration = ActiveRecord::PtOscMigration.new
+      @tool_version = states('tool_version').starts_as('100')
+      ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('100')).when(@tool_version.is('100'))
+    end
+
+    teardown do
+      ActiveRecord::PtOscMigration.unstub(:tool_version)
     end
 
     context '#percona_command' do
@@ -47,7 +53,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
           should 'set missing flags to default values' do
             flags_with_defaults = ActiveRecord::PtOscMigration.percona_flags.select do |flag, config|
-              config.key?(:default) && flag != 'execute'
+              config.key?(:default) && flag != 'execute' && !config[:boolean]
             end
 
             command = @migration.send(:percona_command, '', '', '')
@@ -55,6 +61,78 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
               assert command.include?("--#{flag} #{config[:default]}"),
                      "Default value #{config[:default]} for flag #{flag} was not present in command: #{command}"
             end
+          end
+        end
+
+        context 'with flags having version requirements' do
+          setup do
+            flags = ActiveRecord::PtOscMigration.percona_flags.merge({ 'flag-with-requirement' => { version: '> 2.0' } })
+            ActiveRecord::PtOscMigration.stubs(:percona_flags).returns(flags)
+          end
+
+          teardown do
+            ActiveRecord::PtOscMigration.unstub(:percona_flags)
+          end
+
+          context 'with matching tool version' do
+            setup do
+              @old_tool_version = @tool_version.current_state
+              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('2.6.40')).when(@tool_version.is('2.6.40'))
+              @tool_version.become('2.6.40')
+            end
+
+            teardown do
+              @tool_version.become(@old_tool_version)
+            end
+
+            should 'contain the flag in the output' do
+              command = @migration.send(:percona_command, '', '', '', 'flag-with-requirement' => 'foobar')
+              assert command.include?('--flag-with-requirement foobar'),
+                     "Flag was not included in command '#{command}' despite meeting version requirement."
+            end
+          end
+
+          context 'with non-matching tool version' do
+            setup do
+              @old_tool_version = @tool_version.current_state
+              ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('1.12')).when(@tool_version.is('1.12'))
+              @tool_version.become('1.12')
+            end
+
+            teardown do
+              @tool_version.become(@old_tool_version)
+            end
+
+            should 'not contain the flag in the output' do
+              command = @migration.send(:percona_command, '', '', '', 'flag-with-requirement' => 'foobar')
+              assert_equal false, command.include?('--flag-with-requirement'),
+                           "Flag was included in command '#{command}' despite not meeting version requirement."
+            end
+          end
+        end
+
+        context 'with boolean flags' do
+          setup do
+            flags = ActiveRecord::PtOscMigration.percona_flags.merge({ 'boolean-flag' => { boolean: true } })
+            ActiveRecord::PtOscMigration.stubs(:percona_flags).returns(flags)
+          end
+
+          teardown do
+            ActiveRecord::PtOscMigration.unstub(:percona_flags)
+          end
+
+          should 'include just the flag (no value) when true' do
+            command = @migration.send(:percona_command, '', '', '', 'boolean-flag' => true)
+            matches_eof = command =~ /\-\-boolean\-flag\s*$/
+            matches_middle = command =~ /\-\-boolean\-flag\s*\-\-/
+            assert matches_eof || matches_middle, "Boolean flag was malformed in command '#{command}'."
+          end
+
+          should 'include a "no" version of the flag when false' do
+            command = @migration.send(:percona_command, '', '', '', 'boolean-flag' => false)
+            matches_eof = command =~ /\-\-no\-boolean\-flag\s*$/
+            matches_middle = command =~ /\-\-no\-boolean\-flag\s*\-\-/
+            assert matches_eof || matches_middle, "Boolean flag was malformed in command '#{command}'."
           end
         end
 
@@ -76,7 +154,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           end
 
           should 'call #make_path_absolute' do
-            @migration.expects(:make_path_absolute).with(@path)
+            @migration.expects(:make_path_absolute).with(@path, anything)
             @migration.send(:percona_command, '', '', '', @options)
           end
         end
@@ -190,6 +268,24 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
         should 'return an absolute path' do
           assert_equal '/', @migration.send(:make_path_absolute, @path)[0]
         end
+      end
+    end
+
+    context '#execute_only' do
+      should 'return the default flag value during a dry run' do
+        ActiveRecord::PtOscMigration.stubs(:percona_flags).returns('foo' => { default: 'bar' })
+        assert_equal 'bar', @migration.send(:execute_only, 'baz', all_options: { execute: false }, flag_name: 'foo')
+        ActiveRecord::PtOscMigration.unstub(:percona_flags)
+      end
+
+      should 'return nil during a dry run if there is no default value' do
+        ActiveRecord::PtOscMigration.stubs(:percona_flags).returns('foo' => {})
+        assert_nil @migration.send(:execute_only, 'baz', all_options: { execute: false }, flag_name: 'foo')
+        ActiveRecord::PtOscMigration.unstub(:percona_flags)
+      end
+
+      should 'pass the flag through when executing' do
+        assert_equal 'baz', @migration.send(:execute_only, 'baz', all_options: { execute: true }, flag_name: 'foo')
       end
     end
 
@@ -422,6 +518,23 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           logfile = @migration.send(:logfile)
           assert 'log/fakelog.file'.in?(logfile.path), 'Configured log file not found in path'
         end
+      end
+    end
+  end
+
+  context '#tool_version' do
+    context 'with known tool version' do
+      setup do
+        ActiveRecord::PtOscMigration.stubs(:get_tool_version).returns('pt-online-schema-change 2.2.7')
+      end
+
+      teardown do
+        ActiveRecord::PtOscMigration.unstub(:get_tool_version)
+      end
+
+      should 'return a Gem::Version with the expected value' do
+        assert_instance_of Gem::Version, ActiveRecord::PtOscMigration.send(:tool_version)
+        assert_equal '2.2.7', ActiveRecord::PtOscMigration.send(:tool_version).version
       end
     end
   end

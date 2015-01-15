@@ -24,3 +24,8 @@ test_execute_string:
   <<: *test
   percona:
     run_mode: 'execute'
+
+test_no_check_alter:
+  <<: *test
+  percona:
+    check-alter: false

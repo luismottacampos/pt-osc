@@ -9,10 +9,17 @@ module ActiveRecord
         mutator: :make_path_absolute,
       },
       'recursion-method' => {
+        version: '>= 2.1',
       },
       'execute' => {
         default: false,
       },
+      'check-alter' => {
+        boolean: true,
+        default: true,
+        mutator: :execute_only,
+        version: '>= 2.1',
+      }
     }.freeze
 
     def self.percona_flags
@@ -140,18 +147,14 @@ module ActiveRecord
 
       # Set defaults
       self.class.percona_flags.each do |flag, flag_config|
-        options[flag] ||= flag_config[:default] if flag_config.key?(:default)
+        options[flag] = flag_config[:default] if flag_config.key?(:default) && !options.key?(flag)
       end
 
-      # Determine run mode
-      command += options.delete(:execute) ? ' --execute' : ' --dry-run'
+      "#{command}#{run_mode_flag(options)}#{command_flags(options)}"
+    end
 
-      options.each do |key, value|
-        value = send(self.class.percona_flags[key][:mutator], value) if self.class.percona_flags[key].try(:key?, :mutator)
-        command += " --#{key} #{value}"
-      end
-
-      command
+    def self.tool_version
+      @_tool_version ||= Gem::Version.new(get_tool_version.sub('pt-online-schema-change', '').strip)
     end
 
     def database_config
@@ -175,11 +178,48 @@ module ActiveRecord
     end
 
     private
+    def command_flags(options)
+      options.map do |key, value|
+        next if key == 'execute'
+        flag_options = self.class.percona_flags[key]
+
+        # Satisfy version requirements
+        if flag_options.try(:key?, :version)
+          next unless Gem::Requirement.new(flag_options[:version]).satisfied_by? self.class.tool_version
+        end
+
+        # Mutate the value if needed
+        if flag_options.try(:key?, :mutator)
+          value = send(flag_options[:mutator], value, all_options: options, flag_name: key)
+        end
+
+        # Handle boolean flags
+        if flag_options.try(:[], :boolean)
+          key = "no-#{key}" unless value
+          value = nil
+        end
+
+        " --#{key} #{value}"
+      end.join('')
+    end
+
+    def run_mode_flag(options)
+      options[:execute] ? ' --execute' : ' --dry-run'
+    end
+
+    def self.get_tool_version
+      `pt-online-schema-change --version`
+    end
+
     # Flag mutators
-    def make_path_absolute(path)
+    def make_path_absolute(path, _ = {})
       return path if path[0] == '/'
       # If path is not already absolute, treat it as relative to the app root
       File.expand_path(path, Dir.getwd)
+    end
+
+    def execute_only(flag, options = {})
+      options[:all_options][:execute] ? flag : self.class.percona_flags[options[:flag_name]][:default]
     end
   end
 end

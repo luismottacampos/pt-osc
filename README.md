@@ -38,6 +38,7 @@ environment:
 
 Additional/modified options for the `percona` hash include:
   - `defaults-file`: Can be specified as an absolute path (with leading `/`) or relative (without). Relative paths will be treated as relative to your project's working directory.
+  - `check-alter`: When set to `false`, `ALTER` commands will not be checked when executing (same as [`--no-check-alter`](http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html#cmdoption-pt-online-schema-change--%5Bno%5Dcheck-alter))
   - `run_mode`: Specify `'execute'` to actually run `pt-online-schema-change` when the migration runs. Specify `'print'` to output the commands to run to STDOUT instead. Default is `'print'`.
   - `log`: Specify the file used for logging activity. Can be a relative or absolute path.
 
@@ -61,13 +62,14 @@ This gem is not considered production ready. There will be bugs.
 
 `pt-osc` is tested against:
 - ActiveRecord 3.2 branch
-  - Ruby 1.9.2
   - Ruby 1.9.3
   - Ruby 2.0.0
   - Ruby 2.1.2
   - Ruby 2.1 latest
 
 Support for other versions of Ruby or ActiveRecord is unknown and not guaranteed.
+
+`pt-osc` requires the use of `pt-online-schema-change` 2.0 or later. Some options may not work with all versions.
 
 `pt-osc` is compatible with versions 0.5.0 and later of [zdennis/activerecord-import](https://github.com/zdennis/activerecord-import). It will not work with earlier versions.
 

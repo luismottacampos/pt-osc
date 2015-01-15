@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'shoulda'
   spec.add_development_dependency 'faker'
-  spec.add_development_dependency 'mocha'
+  spec.add_development_dependency 'mocha', '>= 0.9.0'
 
   # For testing using dummy Rails app
   spec.add_development_dependency 'rails', '~> 3.2'
