@@ -44,6 +44,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
             @new_column_name = Faker::Lorem.word
             @new_table_name = Faker::Lorem.word
             @index_name_2 = "#{@index_name}_2"
+            @index_name_3 = "#{@index_name}_3"
 
             TestMigration.class_eval <<-EVAL
             def change
@@ -53,6 +54,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
               rename_column :#{@table_name}, :#{@column_name}, :#{@renamed_column_name}
               remove_column :#{@table_name}, :#{@column_name}
               add_index     :#{@table_name}, :#{@column_name}, name: :#{@index_name_2}
+              add_index     :#{@table_name}, [:#{@new_column_name}, :#{@renamed_column_name}], name: :#{@index_name_3}, unique: true
               remove_index  :#{@table_name}, name: :#{@index_name}
             end
             EVAL
@@ -115,6 +117,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
                   CHANGE `#{@column_name}` `#{@renamed_column_name}` varchar(255) DEFAULT NULL
                   DROP COLUMN `#{@column_name}`
                   ADD  INDEX `#{@index_name_2}` (`#{@column_name}`)
+                  ADD UNIQUE INDEX `#{@index_name_3}` (`#{@new_column_name}`, `#{@renamed_column_name}`)
                   DROP INDEX `#{@index_name}`
                 ALTER
                 expected_alter.strip!.gsub!(/^\s*/, '').gsub!("\n", ',')
