@@ -51,6 +51,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
               rename_table  :#{@table_name}, :#{@new_table_name}
               add_column    :#{@table_name}, :#{@new_column_name}, :integer
               change_column :#{@table_name}, :#{@column_name}, :varchar, default: 'newthing'
+              change_column :#{@table_name}, :#{@column_name}, :varchar, default: :newsymbol
               rename_column :#{@table_name}, :#{@column_name}, :#{@renamed_column_name}
               remove_column :#{@table_name}, :#{@column_name}
               add_index     :#{@table_name}, :#{@column_name}, name: :#{@index_name_2}
@@ -114,6 +115,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
                   RENAME TO `#{@new_table_name}`
                   ADD `#{@new_column_name}` int(11)
                   CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT 'newthing'
+                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT 'newsymbol'
                   CHANGE `#{@column_name}` `#{@renamed_column_name}` varchar(255) DEFAULT NULL
                   DROP COLUMN `#{@column_name}`
                   ADD  INDEX `#{@index_name_2}` (`#{@column_name}`)
