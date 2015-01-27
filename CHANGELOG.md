@@ -1,3 +1,8 @@
+## 0.2.1
+
+- properly quote string values in MySQL commands
+- added additional tests
+
 ## 0.2.0
 
 - support for setting the [`--check-alter` flag](http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html#cmdoption-pt-online-schema-change--%5Bno%5Dcheck-alter)
