@@ -6,10 +6,13 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
       @migration = ActiveRecord::PtOscMigration.new
       @tool_version = states('tool_version').starts_as('100')
       ActiveRecord::PtOscMigration.stubs(:tool_version).returns(Gem::Version.new('100')).when(@tool_version.is('100'))
+      @migration.stubs(:write)
+      @migration.stubs(:announce)
     end
 
     teardown do
       ActiveRecord::PtOscMigration.unstub(:tool_version)
+      @migration.unstub(:write, :announce)
     end
 
     context '#percona_command' do
