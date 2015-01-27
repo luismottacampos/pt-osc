@@ -108,6 +108,18 @@ module ActiveRecord
         add_command(table_name, "DROP INDEX #{quote_column_name(index_name)}")
       end
 
+      # Convert single quotes to double quotes as conservatively as possible
+      def quote(value, column = nil)
+        quoted = super
+        if value.kind_of?(String) && column && column.type == :binary && column.class.respond_to?(:string_to_binary)
+          quoted[1] = '"' if quoted[0] == 'x' && quoted[1] == "'"
+        else
+          quoted[0] = '"' if quoted[0] == "'"
+        end
+        quoted[-1] = '"' if quoted[-1] == "'"
+        quoted
+      end
+
       def clear_commands
         @osc_commands = {}
       end
