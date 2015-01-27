@@ -24,7 +24,6 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
           @table_name = Faker::Lorem.word
           @column_name = Faker::Lorem.word
           @index_name = Faker::Lorem.words.join('_')
-          @index_name_2 = "#{@index_name}_2"
 
           ActiveRecord::Base.connection.execute "DROP TABLE IF EXISTS `#{@table_name}`;"
           ActiveRecord::Base.connection.execute <<-SQL
@@ -41,14 +40,22 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
 
         context 'a migration with only ALTER statements' do
           setup do
+            @renamed_column_name = Faker::Lorem.word
+            @new_column_name = Faker::Lorem.word
+            @new_table_name = Faker::Lorem.word
+            @index_name_2 = "#{@index_name}_2"
+            @index_name_3 = "#{@index_name}_3"
+
             TestMigration.class_eval <<-EVAL
             def change
-              rename_table  :#{@table_name}, :#{Faker::Lorem.word}
-              add_column    :#{@table_name}, :#{Faker::Lorem.word}, :integer
+              rename_table  :#{@table_name}, :#{@new_table_name}
+              add_column    :#{@table_name}, :#{@new_column_name}, :integer
               change_column :#{@table_name}, :#{@column_name}, :varchar, default: 'newthing'
-              rename_column :#{@table_name}, :#{@column_name}, :#{Faker::Lorem.word}
+              change_column :#{@table_name}, :#{@column_name}, :varchar, default: :newsymbol
+              rename_column :#{@table_name}, :#{@column_name}, :#{@renamed_column_name}
               remove_column :#{@table_name}, :#{@column_name}
               add_index     :#{@table_name}, :#{@column_name}, name: :#{@index_name_2}
+              add_index     :#{@table_name}, [:#{@new_column_name}, :#{@renamed_column_name}], name: :#{@index_name_3}, unique: true
               remove_index  :#{@table_name}, name: :#{@index_name}
             end
             EVAL
@@ -58,29 +65,29 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
             TestMigration.send(:remove_method, :change)
           end
 
-          context 'ignoring schema lookups' do
+          context 'with suppressed output' do
             setup do
-              # Kind of a hacky way to do this
-              ignored_sql = ActiveRecord::SQLCounter.ignored_sql + [
-                /^SHOW FULL FIELDS FROM/,
-                /^SHOW COLUMNS FROM/,
-                /^SHOW KEYS FROM/,
-              ]
-              ActiveRecord::SQLCounter.any_instance.stubs(:ignore).returns(ignored_sql)
+              @migration.stubs(:write)
+              @migration.stubs(:announce)
             end
 
             teardown do
-              ActiveRecord::SQLCounter.any_instance.unstub(:ignore)
+              @migration.unstub(:write, :announce)
             end
 
-            context 'with suppressed output' do
+            context 'ignoring schema lookups' do
               setup do
-                @migration.stubs(:write)
-                @migration.stubs(:announce)
+                # Kind of a hacky way to do this
+                ignored_sql = ActiveRecord::SQLCounter.ignored_sql + [
+                  /^SHOW FULL FIELDS FROM/,
+                  /^SHOW COLUMNS FROM/,
+                  /^SHOW KEYS FROM/,
+                ]
+                ActiveRecord::SQLCounter.any_instance.stubs(:ignore).returns(ignored_sql)
               end
 
               teardown do
-                @migration.unstub(:write, :announce)
+                ActiveRecord::SQLCounter.any_instance.unstub(:ignore)
               end
 
               should 'not execute any queries immediately' do
@@ -99,6 +106,35 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
                 should 'not directly execute any queries when migrating' do
                   assert_no_queries { @migration.migrate(:up) }
                 end
+              end
+            end
+
+            context 'the resulting command' do
+              setup do
+                @migration.change
+                @command_string = @migration.connection.get_commands_string(@table_name)
+              end
+
+              should 'have the correct pt-osc ALTER statement' do
+                expected_alter = <<-ALTER
+                  RENAME TO `#{@new_table_name}`
+                  ADD `#{@new_column_name}` int(11)
+                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT "newthing"
+                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT "newsymbol"
+                  CHANGE `#{@column_name}` `#{@renamed_column_name}` varchar(255) DEFAULT NULL
+                  DROP COLUMN `#{@column_name}`
+                  ADD  INDEX `#{@index_name_2}` (`#{@column_name}`)
+                  ADD UNIQUE INDEX `#{@index_name_3}` (`#{@new_column_name}`, `#{@renamed_column_name}`)
+                  DROP INDEX `#{@index_name}`
+                ALTER
+                expected_alter.strip!.gsub!(/^\s*/, '').gsub!("\n", ',')
+
+                assert_equal expected_alter, @command_string
+              end
+
+              should 'not nest identical quotes in ALTER statement' do
+                command = @migration.send(:percona_command, @command_string, 'database', @table_name)
+                assert_match /--alter '[^']+' D=database,t=#{@table_name}/, command
               end
             end
           end
