@@ -7,13 +7,20 @@ rvm:
   - 2.0.0
   - 2.1.2
   - 2.1
+  - 2.2
+  - ruby-head
 env:
-  - CODECLIMATE_REPO_TOKEN=0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
+  global:
+    - CODECLIMATE_REPO_TOKEN=0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
+  matrix:
+    - PT_OSC_VERSION=LATEST
+    - PT_OSC_VERSION=DEVELOPMENT
 cache:
   - bundler
   - apt
 bundler_args: --binstubs --retry=5
 before_script:
+  - travis_retry $TRAVIS_BUILD_DIR/test/travisci/install_pt_osc.sh
   - unset RAILS_ENV
   - unset RACK_ENV
   - bundle exec rake db:test_create
@@ -22,3 +29,9 @@ script:
 addons:
   code_climate:
     repo_token: 0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
+matrix:
+  fast_finish: true
+  allow_failures:
+    - rvm: ruby-head
+    - rvm: 2.2
+    - env: PT_OSC_VERSION=DEVELOPMENT
