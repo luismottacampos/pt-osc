@@ -20,6 +20,13 @@ module ActiveRecord
         mutator: :execute_only,
         version: '>= 2.1',
       },
+      'user' => {
+        mutator: :get_from_config,
+        arguments: {
+          key_name: 'username',
+        },
+        default: nil,
+      },
       'password' => {
         mutator: :get_from_config,
         default: nil,
@@ -198,7 +205,7 @@ module ActiveRecord
 
         # Mutate the value if needed
         if flag_options.try(:key?, :mutator)
-          value = send(flag_options[:mutator], value, all_options: options, flag_name: key)
+          value = send(flag_options[:mutator], value, { all_options: options, flag_name: key }.merge(flag_options[:arguments] || {}))
           next if value.nil? # Allow a mutator to determine the flag shouldn't be used
         end
 
@@ -241,7 +248,7 @@ module ActiveRecord
     def get_from_config(flag, options = {})
       case flag
       when nil
-        database_config[options[:flag_name]]
+        database_config[options[:key_name] || options[:flag_name]]
       when false
         nil
       else

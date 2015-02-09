@@ -162,6 +162,52 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           end
         end
 
+        context 'user flag' do
+          context 'with normal database username specified' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(username: 'foobar')
+            end
+
+            should 'add the user to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert command.include?('--user foobar'), "command #{command} did not include user"
+            end
+          end
+
+          context 'with user specified in percona config' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(percona: { user: 'foobar' })
+            end
+
+            should 'add the user to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert command.include?('--user foobar'), "command #{command} did not include user"
+            end
+          end
+
+          context 'with user specified in database and percona config' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(username: 'foobar', percona: { user: 'bazqux' })
+            end
+
+            should 'add the percona user to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert command.include?('--user bazqux'), "command #{command} did not include the right user"
+            end
+          end
+
+          context 'with user forbidden in percona config' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(username: 'foobar', percona: { user: false })
+            end
+
+            should 'not add a user to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert !command.include?('--user foobar'), "command #{command} included user but should not have"
+            end
+          end
+        end
+
         context 'password flag' do
           context 'with normal database password specified' do
             setup do
@@ -351,7 +397,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
     context '#get_from_config' do
       setup do
-        @migration.stubs(:raw_database_config).returns(flag: 'foobar')
+        @migration.stubs(:raw_database_config).returns(flag: 'foobar', other_flag: 'mooshu')
       end
 
       should 'return nil if false is specified' do
@@ -360,6 +406,10 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
       should 'get the value from the config if it was not specified' do
         assert_equal 'foobar', @migration.send(:get_from_config, nil, flag_name: 'flag')
+      end
+
+      should 'prefer the key name if given explicitly' do
+        assert_equal 'mooshu', @migration.send(:get_from_config, nil, flag_name: 'flag', key_name: 'other_flag')
       end
 
       should 'pass string values through' do
