@@ -19,7 +19,11 @@ module ActiveRecord
         default: true,
         mutator: :execute_only,
         version: '>= 2.1',
-      }
+      },
+      'password' => {
+        mutator: :get_from_config,
+        default: nil,
+      },
     }.freeze
 
     def self.percona_flags
@@ -98,7 +102,7 @@ module ActiveRecord
 
     def execute_sql_for_table(execute_sql, database_name, table_name, dry_run = true)
       command = percona_command(execute_sql, database_name, table_name, execute: !dry_run)
-      logger.info "Command is #{command}"
+      logger.info "Command is #{self.class.sanitize_command(command)}"
 
       success = Kernel.system command
 
@@ -122,7 +126,7 @@ module ActiveRecord
         announce 'Run the following commands:'
 
         [true, false].each do |dry_run|
-          write percona_command(execute_sql, database_name, table_name, execute: !dry_run)
+          write self.class.sanitize_command(percona_command(execute_sql, database_name, table_name, execute: !dry_run))
         end
 
       end
@@ -195,6 +199,7 @@ module ActiveRecord
         # Mutate the value if needed
         if flag_options.try(:key?, :mutator)
           value = send(flag_options[:mutator], value, all_options: options, flag_name: key)
+          next if value.nil? # Allow a mutator to determine the flag shouldn't be used
         end
 
         # Handle boolean flags
@@ -215,6 +220,13 @@ module ActiveRecord
       `pt-online-schema-change --version`
     end
 
+    def self.sanitize_command(command)
+      command_parts = command.shellsplit
+      password_index = command_parts.find_index('--password')
+      command_parts[password_index + 1] = '_hidden_' unless password_index.nil? || command_parts.length == password_index + 1
+      command_parts.shelljoin
+    end
+
     # Flag mutators
     def make_path_absolute(path, _ = {})
       return path if path[0] == '/'
@@ -224,6 +236,17 @@ module ActiveRecord
 
     def execute_only(flag, options = {})
       options[:all_options][:execute] ? flag : self.class.percona_flags[options[:flag_name]][:default]
+    end
+
+    def get_from_config(flag, options = {})
+      case flag
+      when nil
+        database_config[options[:flag_name]]
+      when false
+        nil
+      else
+        flag
+      end
     end
   end
 end

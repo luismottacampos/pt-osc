@@ -41,6 +41,7 @@ Additional/modified options for the `percona` hash include:
   - `check-alter`: When set to `false`, `ALTER` commands will not be checked when executing (same as [`--no-check-alter`](http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html#cmdoption-pt-online-schema-change--%5Bno%5Dcheck-alter))
   - `run_mode`: Specify `'execute'` to actually run `pt-online-schema-change` when the migration runs. Specify `'print'` to output the commands to run to STDOUT instead. Default is `'print'`.
   - `log`: Specify the file used for logging activity. Can be a relative or absolute path.
+  - `password`: By default, the command will use the password given in your standard database config. Specify a password here to override. Specify `false` to omit password (such as when using a `defaults-file`.
 
 #### Migrations
 

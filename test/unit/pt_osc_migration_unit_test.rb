@@ -56,7 +56,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
           should 'set missing flags to default values' do
             flags_with_defaults = ActiveRecord::PtOscMigration.percona_flags.select do |flag, config|
-              config.key?(:default) && flag != 'execute' && !config[:boolean]
+              !config[:default].nil? && flag != 'execute' && !config[:boolean]
             end
 
             command = @migration.send(:percona_command, '', '', '')
@@ -161,6 +161,52 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
             @migration.send(:percona_command, '', '', '', @options)
           end
         end
+
+        context 'password flag' do
+          context 'with normal database password specified' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(password: 'foobar')
+            end
+
+            should 'add the password to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert command.include?('--password foobar'), "command #{command} did not include password"
+            end
+          end
+
+          context 'with password specified in percona config' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(percona: { password: 'foobar' })
+            end
+
+            should 'add the password to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert command.include?('--password foobar'), "command #{command} did not include password"
+            end
+          end
+
+          context 'with password specified in database and percona config' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(password: 'foobar', percona: { password: 'bazqux' })
+            end
+
+            should 'add the percona password to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert command.include?('--password bazqux'), "command #{command} did not include the right password"
+            end
+          end
+
+          context 'with password forbidden in percona config' do
+            setup do
+              @migration.stubs(:raw_database_config).returns(password: 'foobar', percona: { password: false })
+            end
+
+            should 'not add a password to the command' do
+              command = @migration.send(:percona_command, '', '', '')
+              assert !command.include?('--password foobar'), "command #{command} included password but should not have"
+            end
+          end
+        end
       end
 
       context 'connected to a pt-osc database in print mode' do
@@ -252,6 +298,17 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
       end
     end
 
+    context '#sanitize_command' do
+      should 'strip password out of commands' do
+        assert_equal 'pt-online-schema-change --password _hidden_', @migration.class.send(:sanitize_command, 'pt-online-schema-change --password supersecret')
+        assert_equal 'pt-online-schema-change --password _hidden_', @migration.class.send(:sanitize_command, 'pt-online-schema-change --password %&$^*(!(#)CD&`+')
+        assert_equal 'pt-online-schema-change --password _hidden_', @migration.class.send(:sanitize_command, 'pt-online-schema-change --password "who uses spaces in passwords?"')
+        assert_equal 'pt-online-schema-change --other --password _hidden_ --fields', @migration.class.send(:sanitize_command, 'pt-online-schema-change --other --password supersecret --fields')
+        assert_equal 'pt-online-schema-change --other --fields --password _hidden_', @migration.class.send(:sanitize_command, 'pt-online-schema-change --other --fields --password supersecret')
+        assert_equal 'pt-online-schema-change --password', @migration.class.send(:sanitize_command, 'pt-online-schema-change --password')
+      end
+    end
+
     context '#make_path_absolute' do
       context 'with an absolute path' do
         setup do
@@ -289,6 +346,24 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
 
       should 'pass the flag through when executing' do
         assert_equal 'baz', @migration.send(:execute_only, 'baz', all_options: { execute: true }, flag_name: 'foo')
+      end
+    end
+
+    context '#get_from_config' do
+      setup do
+        @migration.stubs(:raw_database_config).returns(flag: 'foobar')
+      end
+
+      should 'return nil if false is specified' do
+        assert_nil @migration.send(:get_from_config, false)
+      end
+
+      should 'get the value from the config if it was not specified' do
+        assert_equal 'foobar', @migration.send(:get_from_config, nil, flag_name: 'flag')
+      end
+
+      should 'pass string values through' do
+        assert_equal 'bazqux', @migration.send(:get_from_config, 'bazqux')
       end
     end
 
@@ -427,9 +502,9 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
           end
 
           should 'log the command' do
-            @migration.expects(:percona_command).returns('<<percona command>>')
+            @migration.expects(:percona_command).returns('percona command')
             @migration.send(:execute_sql_for_table, nil, nil, nil)
-            assert '<<percona command>>'.in?(@dummy_log.string), 'Log entry did not contain percona command'
+            assert 'percona command'.in?(@dummy_log.string), 'Log entry did not contain percona command'
           end
 
           context 'with successful execution' do
