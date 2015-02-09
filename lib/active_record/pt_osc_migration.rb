@@ -158,7 +158,7 @@ module ActiveRecord
     end
 
     def database_config
-      @db_config ||= (@connection.instance_variable_get(:@config) || ActiveRecord::Base.connection_config).with_indifferent_access
+      @db_config ||= raw_database_config.with_indifferent_access
     end
 
     def percona_config
@@ -178,6 +178,10 @@ module ActiveRecord
     end
 
     private
+    def raw_database_config
+      connection.pool.spec.config || ActiveRecord::Base.connection_config
+    end
+
     def command_flags(options)
       options.map do |key, value|
         next if key == 'execute'

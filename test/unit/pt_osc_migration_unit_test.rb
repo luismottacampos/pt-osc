@@ -309,7 +309,7 @@ class PtOscMigrationUnitTest < Test::Unit::TestCase
         context 'connected to a database' do
           setup do
             @database_name = Faker::Lorem.word
-            @migration.stubs(:database_config).returns(database: @database_name)
+            @migration.stubs(:raw_database_config).returns(database: @database_name)
           end
 
           teardown do
