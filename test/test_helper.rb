@@ -18,6 +18,29 @@ def test_spec(key = 'test')
   test_spec
 end
 
+def migrate_and_test_field(command, migration, table_name, field_name, assertions = {})
+  migration.class.class_eval "def change; #{command}; end"
+
+  migration.stubs(:write)
+  migration.stubs(:announce)
+  migration.migrate(:up)
+  migration.unstub(:write, :announce)
+
+  field = ActiveRecord::Base.connection.columns(table_name).find { |f| f.name == field_name }
+  if assertions.delete(:exists) == false
+    assert_nil field
+  else
+    assert_not_nil field
+    assert_equal field_name, field.name
+    assertions.each do |test, expected|
+      actual = field.send(test)
+      assert_equal expected, actual, "Expected #{command} to produce a field of #{test} #{expected}, but it was #{actual}"
+    end
+  end
+
+  migration.class.send(:remove_method, :change)
+end
+
 # SQLCounter is part of ActiveRecord but is not distributed with the gem (used for internal tests only)
 # see https://github.com/rails/rails/blob/3-2-stable/activerecord/test/cases/helper.rb#L59
 module ActiveRecord
