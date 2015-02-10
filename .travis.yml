@@ -15,12 +15,15 @@ env:
   matrix:
     - PT_OSC_VERSION=LATEST
     - PT_OSC_VERSION=DEVELOPMENT
+    - PT_OSC_VERSION=2.2.12
+    - PT_OSC_VERSION=2.2.11
+    - PT_OSC_VERSION=2.1.11
 cache:
   - bundler
   - apt
 bundler_args: --binstubs --retry=5
 before_script:
-  - travis_retry $TRAVIS_BUILD_DIR/test/travisci/install_pt_osc.sh
+  - $TRAVIS_BUILD_DIR/test/travisci/install_pt_osc.sh
   - unset RAILS_ENV
   - unset RACK_ENV
   - bundle exec rake db:test_create
@@ -35,3 +38,5 @@ matrix:
     - rvm: ruby-head
     - rvm: 2.2
     - env: PT_OSC_VERSION=DEVELOPMENT
+    - env: PT_OSC_VERSION=1.0.2
+    - env: PT_OSC_VERSION=2.0.5
