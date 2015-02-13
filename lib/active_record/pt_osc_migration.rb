@@ -1,5 +1,6 @@
 require 'active_record/migration'
 require 'active_record/connection_adapters/mysql_pt_osc_adapter'
+require 'shellwords'
 
 module ActiveRecord
   class PtOscMigration < Migration
@@ -142,7 +143,7 @@ module ActiveRecord
     end
 
     def percona_command(execute_sql, database_name, table_name, options = {})
-      command = "pt-online-schema-change --alter '#{execute_sql}' D=#{database_name},t=#{table_name}"
+      command = ['pt-online-schema-change', '--alter', execute_sql || '', "D=#{database_name},t=#{table_name}"]
 
       # Whitelist
       options = HashWithIndifferentAccess.new(options)
@@ -161,7 +162,9 @@ module ActiveRecord
         options[flag] = flag_config[:default] if flag_config.key?(:default) && !options.key?(flag)
       end
 
-      "#{command}#{run_mode_flag(options)}#{command_flags(options)}"
+      command_parts = command + [run_mode_flag(options)] + command_flags(options)
+
+      command_parts.shelljoin
     end
 
     def self.tool_version
@@ -194,7 +197,7 @@ module ActiveRecord
     end
 
     def command_flags(options)
-      options.map do |key, value|
+      options.flat_map do |key, value|
         next if key == 'execute'
         flag_options = self.class.percona_flags[key]
 
@@ -215,12 +218,12 @@ module ActiveRecord
           value = nil
         end
 
-        " --#{key} #{value}"
-      end.join('')
+        ["--#{key}", value]
+      end.compact
     end
 
     def run_mode_flag(options)
-      options[:execute] ? ' --execute' : ' --dry-run'
+      options[:execute] ? '--execute' : '--dry-run'
     end
 
     def self.get_tool_version
