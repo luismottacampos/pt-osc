@@ -110,17 +110,12 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
             end
 
             context 'the resulting command' do
-              setup do
-                @migration.change
-                @command_string = @migration.connection.get_commands_string(@table_name)
-              end
-
               should 'have the correct pt-osc ALTER statement' do
                 expected_alter = <<-ALTER
                   RENAME TO `#{@new_table_name}`
                   ADD `#{@new_column_name}` int(11)
-                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT "newthing"
-                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT "newsymbol"
+                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT 'newthing'
+                  CHANGE `#{@column_name}` `#{@column_name}` varchar DEFAULT 'newsymbol'
                   CHANGE `#{@column_name}` `#{@renamed_column_name}` varchar(255) DEFAULT NULL
                   DROP COLUMN `#{@column_name}`
                   ADD  INDEX `#{@index_name_2}` (`#{@column_name}`)
@@ -129,12 +124,8 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
                 ALTER
                 expected_alter.strip!.gsub!(/^\s*/, '').gsub!("\n", ',')
 
-                assert_equal expected_alter, @command_string
-              end
-
-              should 'not nest identical quotes in ALTER statement' do
-                command = @migration.send(:percona_command, @command_string, 'database', @table_name)
-                assert_match /--alter '[^']+' D=database,t=#{@table_name}/, command
+                @migration.change
+                assert_equal expected_alter, @migration.connection.get_commands_string(@table_name)
               end
             end
           end

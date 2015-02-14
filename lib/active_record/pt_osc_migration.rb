@@ -1,5 +1,6 @@
 require 'active_record/migration'
 require 'active_record/connection_adapters/mysql_pt_osc_adapter'
+require 'shellwords'
 
 module ActiveRecord
   class PtOscMigration < Migration
@@ -19,7 +20,18 @@ module ActiveRecord
         default: true,
         mutator: :execute_only,
         version: '>= 2.1',
-      }
+      },
+      'user' => {
+        mutator: :get_from_config,
+        arguments: {
+          key_name: 'username',
+        },
+        default: nil,
+      },
+      'password' => {
+        mutator: :get_from_config,
+        default: nil,
+      },
     }.freeze
 
     def self.percona_flags
@@ -98,7 +110,7 @@ module ActiveRecord
 
     def execute_sql_for_table(execute_sql, database_name, table_name, dry_run = true)
       command = percona_command(execute_sql, database_name, table_name, execute: !dry_run)
-      logger.info "Command is #{command}"
+      logger.info "Command is #{self.class.sanitize_command(command)}"
 
       success = Kernel.system command
 
@@ -122,7 +134,7 @@ module ActiveRecord
         announce 'Run the following commands:'
 
         [true, false].each do |dry_run|
-          write percona_command(execute_sql, database_name, table_name, execute: !dry_run)
+          write self.class.sanitize_command(percona_command(execute_sql, database_name, table_name, execute: !dry_run))
         end
 
       end
@@ -131,7 +143,7 @@ module ActiveRecord
     end
 
     def percona_command(execute_sql, database_name, table_name, options = {})
-      command = "pt-online-schema-change --alter '#{execute_sql}' D=#{database_name},t=#{table_name}"
+      command = ['pt-online-schema-change', '--alter', execute_sql || '', "D=#{database_name},t=#{table_name}"]
 
       # Whitelist
       options = HashWithIndifferentAccess.new(options)
@@ -150,7 +162,9 @@ module ActiveRecord
         options[flag] = flag_config[:default] if flag_config.key?(:default) && !options.key?(flag)
       end
 
-      "#{command}#{run_mode_flag(options)}#{command_flags(options)}"
+      command_parts = command + [run_mode_flag(options)] + command_flags(options)
+
+      command_parts.shelljoin
     end
 
     def self.tool_version
@@ -158,7 +172,7 @@ module ActiveRecord
     end
 
     def database_config
-      @db_config ||= (@connection.instance_variable_get(:@config) || ActiveRecord::Base.connection_config).with_indifferent_access
+      @db_config ||= raw_database_config.with_indifferent_access
     end
 
     def percona_config
@@ -178,8 +192,12 @@ module ActiveRecord
     end
 
     private
+    def raw_database_config
+      connection.pool.spec.config || ActiveRecord::Base.connection_config
+    end
+
     def command_flags(options)
-      options.map do |key, value|
+      options.flat_map do |key, value|
         next if key == 'execute'
         flag_options = self.class.percona_flags[key]
 
@@ -190,7 +208,8 @@ module ActiveRecord
 
         # Mutate the value if needed
         if flag_options.try(:key?, :mutator)
-          value = send(flag_options[:mutator], value, all_options: options, flag_name: key)
+          value = send(flag_options[:mutator], value, { all_options: options, flag_name: key }.merge(flag_options[:arguments] || {}))
+          next if value.nil? # Allow a mutator to determine the flag shouldn't be used
         end
 
         # Handle boolean flags
@@ -199,16 +218,23 @@ module ActiveRecord
           value = nil
         end
 
-        " --#{key} #{value}"
-      end.join('')
+        ["--#{key}", value]
+      end.compact
     end
 
     def run_mode_flag(options)
-      options[:execute] ? ' --execute' : ' --dry-run'
+      options[:execute] ? '--execute' : '--dry-run'
     end
 
     def self.get_tool_version
       `pt-online-schema-change --version`
+    end
+
+    def self.sanitize_command(command)
+      command_parts = command.shellsplit
+      password_index = command_parts.find_index('--password')
+      command_parts[password_index + 1] = '_hidden_' unless password_index.nil? || command_parts.length == password_index + 1
+      command_parts.shelljoin
     end
 
     # Flag mutators
@@ -220,6 +246,17 @@ module ActiveRecord
 
     def execute_only(flag, options = {})
       options[:all_options][:execute] ? flag : self.class.percona_flags[options[:flag_name]][:default]
+    end
+
+    def get_from_config(flag, options = {})
+      case flag
+      when nil
+        database_config[options[:key_name] || options[:flag_name]]
+      when false
+        nil
+      else
+        flag
+      end
     end
   end
 end

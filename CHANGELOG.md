@@ -1,3 +1,10 @@
+## 0.2.2
+
+- fix bugs with string quoting, use shellwords instead
+- added integration tests for execution of pt-osc migrations
+- support `user` and `password` flags in percona config
+- pull `username` and `password` from database config when available
+
 ## 0.2.1
 
 - properly quote string values in MySQL commands
