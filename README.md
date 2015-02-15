@@ -1,7 +1,8 @@
-[![Travis CI](https://travis-ci.org/steverice/pt-osc.svg)](https://travis-ci.org/steverice/pt-osc)
-[![Code Climate](https://codeclimate.com/github/steverice/pt-osc.png)](https://codeclimate.com/github/steverice/pt-osc)
-[![Code Coverage](https://codeclimate.com/github/steverice/pt-osc/coverage.png)](https://codeclimate.com/github/steverice/pt-osc)
-[![Gem Version](https://badge.fury.io/rb/pt-osc.svg)](http://badge.fury.io/rb/pt-osc)
+[![Travis CI](https://img.shields.io/travis/steverice/pt-osc.svg)](https://travis-ci.org/steverice/pt-osc)
+[![Code Climate](https://img.shields.io/codeclimate/github/steverice/pt-osc.svg)](https://codeclimate.com/github/steverice/pt-osc)
+[![Code Coverage](https://img.shields.io/codeclimate/coverage/github/steverice/pt-osc.svg)](https://codeclimate.com/github/steverice/pt-osc)
+[![Gem Version](https://img.shields.io/gem/v/pt-osc.svg)](http://badge.fury.io/rb/pt-osc)
+[![Dependencies](https://img.shields.io/gemnasium/steverice/pt-osc.svg)](https://gemnasium.com/steverice/pt-osc)
 
 ## `pt-online-schema-change` migrations
 
