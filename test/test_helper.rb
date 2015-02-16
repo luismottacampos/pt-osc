@@ -41,6 +41,33 @@ def migrate_and_test_field(command, migration, table_name, field_name, assertion
   migration.class.send(:remove_method, :change)
 end
 
+# @return [Array<Hash>] Fixtures containing :type, :default, :expected_default, and :command for use with sprintf
+def add_column_fixtures
+  # Rails' "magic" time, for Time columns
+  # https://github.com/rails/rails/blob/fcf9b712b1dbbcb8f48644e6f20676ad9480ba66/activerecord/lib/active_record/type/time.rb#L16
+  base_date = Time.utc(2000, 1, 1, 0, 0, 0)
+
+  datetime_value = Time.at(Time.now.to_i).utc # Date types we're testing don't have sub-second precision
+  date_value = Time.utc(datetime_value.year, datetime_value.month, datetime_value.day)
+  rails_time_value = Time.utc(base_date.year, base_date.month, base_date.day, datetime_value.hour, datetime_value.min, datetime_value.sec)
+
+  fixtures = [
+    { type: :integer, default: 42 },
+    { type: :string, default: ['foobar', :bazqux], expected_default: ['foobar', 'bazqux'] },
+    { type: :text, default: nil }, # TEXT columns cannot have a default http://dev.mysql.com/doc/refman/5.7/en/blob.html#idm140380410069472
+    { type: :float, default: 3.14159 },
+    { type: :datetime, default: datetime_value.strftime('%F %T'), expected_default: datetime_value },
+    { type: :time, default: datetime_value.strftime('%T'), expected_default: rails_time_value },
+    { type: :date, default: datetime_value.strftime('%F'), expected_default: date_value },
+    { type: :binary, default: nil }, # BLOB columns cannot have a default http://dev.mysql.com/doc/refman/5.7/en/blob.html#idm140380410069472
+    { type: :boolean, default: [false, true] },
+  ]
+  fixtures.map do |fixture|
+    fixture[:command] = "add_column :%{table}, :%{column}, :#{fixture[:type]}, default: %<default>p, null: %{nullable}"
+    fixture
+  end
+end
+
 # SQLCounter is part of ActiveRecord but is not distributed with the gem (used for internal tests only)
 # see https://github.com/rails/rails/blob/3-2-stable/activerecord/test/cases/helper.rb#L59
 module ActiveRecord
