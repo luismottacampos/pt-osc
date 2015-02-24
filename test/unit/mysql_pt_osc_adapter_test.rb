@@ -7,6 +7,13 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
     setup do
       TestConnection.establish_connection(test_spec)
       @adapter = TestConnection.connection
+      # Silence warnings about not using an ActiveRecord::PtOscMigration
+      # @see Kernel#suppress_warnings
+      @original_verbosity, $VERBOSE = $VERBOSE, nil
+    end
+
+    teardown do
+      $VERBOSE = @original_verbosity
     end
 
     context '#rename_table' do
