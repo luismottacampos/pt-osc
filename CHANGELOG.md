@@ -1,3 +1,7 @@
+## 0.2.3
+
+- a warning will be issued if an `ALTER` command is called outside of a PtOscMigration
+
 ## 0.2.2
 
 - fix bugs with string quoting, use shellwords instead
