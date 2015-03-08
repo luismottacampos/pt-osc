@@ -39,7 +39,7 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
 
         should 'add an ADD command to the commands hash' do
           table_name = Faker::Lorem.word
-          column_name = Faker::Lorem.word
+          column_name = 'foobar'
           @adapter.add_column(table_name, column_name, :string, default: 0, null: false)
           assert_equal "ADD `#{column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, table_name).first
         end
@@ -55,7 +55,7 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
         context 'with an existing table and column' do
           setup do
             @table_name = Faker::Lorem.word
-            @column_name = Faker::Lorem.word
+            @column_name = 'foobar'
             @adapter.create_table @table_name, force: true do |t|
               t.string @column_name
             end
@@ -78,14 +78,14 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
         context 'with an existing table and column' do
           setup do
             @table_name = Faker::Lorem.word
-            @column_name = Faker::Lorem.word
+            @column_name = 'foobar'
             @adapter.create_table @table_name, force: true do |t|
               t.string @column_name, default: nil
             end
           end
 
           should 'add a CHANGE command to the commands hash' do
-            new_column_name = Faker::Lorem.word
+            new_column_name = 'foobar'
             @adapter.rename_column(@table_name, @column_name, new_column_name)
             assert_equal "CHANGE `#{@column_name}` `#{new_column_name}` varchar(255) DEFAULT NULL", @adapter.send(:get_commands, @table_name).first
           end
@@ -101,14 +101,14 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
 
         should 'add a DROP COLUMN command to the commands hash' do
           table_name = Faker::Lorem.word
-          column_name = Faker::Lorem.word
+          column_name = 'foobar'
           @adapter.remove_column(table_name, column_name)
           assert_equal "DROP COLUMN `#{column_name}`", @adapter.send(:get_commands, table_name).first
         end
 
         should 'add multiple DROP COLUMN commands to the commands hash' do
           table_name = Faker::Lorem.word
-          column_names = 3.times.map { Faker::Lorem.word }
+          column_names = %w(foo bar baz)
           @adapter.remove_column(table_name, *column_names)
           commands = @adapter.send(:get_commands, table_name)
           column_names.each_with_index do |column_name, index|
@@ -127,7 +127,7 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
         context 'with an existing table and columns' do
           setup do
             @table_name = Faker::Lorem.word
-            @column_names = Faker::Lorem.words
+            @column_names = %w(foo bar baz)
             @adapter.create_table @table_name, force: true do |t|
               @column_names.each do |column_name|
                 t.string(column_name, default: nil)
@@ -164,7 +164,7 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
 
         should 'add a DROP COLUMN command to the commands hash' do
           table_name = Faker::Lorem.word
-          index_name = Faker::Lorem.word
+          index_name = Faker::Lorem.words.join('_')
           @adapter.remove_index!(table_name, index_name)
           assert_equal "DROP INDEX `#{index_name}`", @adapter.send(:get_commands, table_name).first
         end
