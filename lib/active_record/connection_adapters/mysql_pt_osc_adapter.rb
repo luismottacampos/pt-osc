@@ -123,8 +123,22 @@ module ActiveRecord
 
       protected
       def add_command(table_name, command)
+        warn (<<-WARN
+        You are trying to ALTER table "#{table_name}" with the mysql_pt_osc adapter without using an PtOscMigration.
+        Be aware that ALTER commands will only be executed via pt-online-schema-change inside of an ActiveRecord::PtOscMigration.
+        It is likely that although your migration will complete, no schema alterations have been made.
+        WARN
+        ) if caller.any? { |c| c.include? 'active_record/migration.rb' } && caller.none? { |c| c.include? 'active_record/pt_osc_migration.rb' }
         get_commands[table_name] ||= []
         get_commands[table_name] << command
+      end
+
+      # Provides the opportunity to handle warnings in a custom way
+      # @param [String] message
+      def warn(message)
+        # Rake tasks loaded through Railties had warnings silenced before Rails 4.1
+        # @see https://github.com/rails/rails/pull/11601
+        defined?(Rails) && Rails.version < '4.1' ? enable_warnings { super } : super
       end
 
       def get_commands(table_name = nil)

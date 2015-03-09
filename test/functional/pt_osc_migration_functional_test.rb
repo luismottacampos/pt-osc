@@ -22,7 +22,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
       context 'on an existing table with an existing column' do
         setup do
           @table_name = Faker::Lorem.word
-          @column_name = Faker::Lorem.word
+          @column_name = 'foobar'
           @index_name = Faker::Lorem.words.join('_')
 
           ActiveRecord::Base.connection.execute "DROP TABLE IF EXISTS `#{@table_name}`;"
@@ -40,8 +40,8 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
 
         context 'a migration with only ALTER statements' do
           setup do
-            @renamed_column_name = Faker::Lorem.word
-            @new_column_name = Faker::Lorem.word
+            @renamed_column_name = 'foobar'
+            @new_column_name = 'bazqux'
             @new_table_name = Faker::Lorem.word
             @index_name_2 = "#{@index_name}_2"
             @index_name_3 = "#{@index_name}_3"

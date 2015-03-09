@@ -46,32 +46,14 @@ class PtOscMigrationIntegrationTest < ActiveRecord::TestCase
             ]
           end
 
-          # Rails' "magic" time, for Time columns
-          # https://github.com/rails/rails/blob/fcf9b712b1dbbcb8f48644e6f20676ad9480ba66/activerecord/lib/active_record/type/time.rb#L16
-          base_date = Time.utc(2000, 1, 1, 0, 0, 0)
-
-          datetime_value = Time.at(Time.now.to_i).utc # Date types we're testing don't have sub-second precision
-          date_value = Time.utc(datetime_value.year, datetime_value.month, datetime_value.day)
-          rails_time_value = Time.utc(base_date.year, base_date.month, base_date.day, datetime_value.hour, datetime_value.min, datetime_value.sec)
-
-          [
-            { type: :integer, default: 42 },
-            { type: :string, default: ["'foobar'", ':bazqux'], expected_default: ['foobar', 'bazqux'] },
-            { type: :text, default: nil }, # TEXT columns cannot have a default http://dev.mysql.com/doc/refman/5.7/en/blob.html#idm140380410069472
-            { type: :float, default: 3.14159 },
-            { type: :datetime, default: "'#{datetime_value.strftime('%F %T')}'", expected_default: datetime_value },
-            { type: :time, default: "'#{datetime_value.strftime('%T')}'", expected_default: rails_time_value },
-            { type: :date, default: "'#{datetime_value.strftime('%F')}'", expected_default: date_value },
-            { type: :binary, default: nil }, # BLOB columns cannot have a default http://dev.mysql.com/doc/refman/5.7/en/blob.html#idm140380410069472
-            { type: :boolean, default: [false, true] },
-          ].each do |test|
+          add_column_fixtures.each do |test|
 
             defaults = [test[:default]].flatten(1).compact # remove nils for columns that can't have a default
             expected_defaults = test[:expected_default] ? [test[:expected_default]].flatten(1) : defaults
 
             should "add a nullable #{test[:type]} column with default null" do
               column_name = "#{@new_column_name}_#{test[:type]}"
-              @arguments[0] = "add_column :#{@table_name}, :#{column_name}, :#{test[:type]}, default: nil, null: true"
+              @arguments[0] = sprintf(test[:command], table: @table_name, column: column_name, default: nil, nullable: true)
               @arguments[-2] = column_name
               @arguments[-1] = { type: test[:type], null: true, default: nil }
               migrate_and_test_field *@arguments
@@ -80,7 +62,7 @@ class PtOscMigrationIntegrationTest < ActiveRecord::TestCase
             defaults.each_with_index do |default, index|
               should "add a nullable #{test[:type]} column with default value #{default}" do
                 column_name = "#{@new_column_name}_#{test[:type]}"
-                @arguments[0] = "add_column :#{@table_name}, :#{column_name}, :#{test[:type]}, default: #{default}, null: true"
+                @arguments[0] = sprintf(test[:command], table: @table_name, column: column_name, default: default, nullable: true)
                 @arguments[-2] = column_name
                 @arguments[-1] = { type: test[:type], null: true, default: expected_defaults[index] }
                 migrate_and_test_field *@arguments
@@ -88,7 +70,7 @@ class PtOscMigrationIntegrationTest < ActiveRecord::TestCase
 
               should "add a not-nullable #{test[:type]} column with default value #{default}" do
                 column_name = "#{@new_column_name}_#{test[:type]}"
-                @arguments[0] = "add_column :#{@table_name}, :#{column_name}, :#{test[:type]}, default: #{default}, null: false"
+                @arguments[0] = sprintf(test[:command], table: @table_name, column: column_name, default: default, nullable: false)
                 @arguments[-2] = column_name
                 @arguments[-1] = { type: test[:type], null: false, default: expected_defaults[index] }
                 migrate_and_test_field *@arguments

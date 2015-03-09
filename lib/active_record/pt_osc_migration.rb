@@ -88,6 +88,11 @@ module ActiveRecord
       end
     end
 
+    def method_missing(method, *arguments, &block) # :nodoc:
+      # Putting this here ensures that pt_osc_migration shows up in the caller trace
+      super
+    end
+
     protected
     def execute_pt_osc
       return unless @connection.is_a? ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter
