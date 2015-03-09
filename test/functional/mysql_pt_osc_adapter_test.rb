@@ -52,6 +52,23 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
           @migration.class.send(:remove_method, :change)
         end
       end
+
+      should 'explicitly enable warnings for Rails versions before 4.1' do
+        fixture = add_column_fixtures.first
+        fixture_command = sprintf(fixture[:command], table: 'a', column: 'b', default: 0, nullable: true)
+        @migration.class.class_eval "def change; #{fixture_command}; end"
+        %w(3.1 3.1.8 3.2 3.2.20 4.0 4.0.12).each do |rails_version|
+          Rails.stubs(:version).returns(rails_version)
+          Object.any_instance.expects(:enable_warnings).once.yields
+          silence_warnings { @migration.migrate(:up) }
+        end
+        %w(4.1 4.1.9 4.2 4.2.0.beta4 4.2.1 5 5.0).each do |rails_version|
+          Rails.stubs(:version).returns(rails_version)
+          Object.any_instance.expects(:enable_warnings).never
+          silence_warnings { @migration.migrate(:up) }
+        end
+        @migration.class.send(:remove_method, :change)
+      end
     end
 
     context 'an ActiveRecord::PtOscMigration' do

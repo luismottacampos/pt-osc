@@ -136,7 +136,9 @@ module ActiveRecord
       # Provides the opportunity to handle warnings in a custom way
       # @param [String] message
       def warn(message)
-        super
+        # Rake tasks loaded through Railties had warnings silenced before Rails 4.1
+        # @see https://github.com/rails/rails/pull/11601
+        defined?(Rails) && Rails.version < '4.1' ? enable_warnings { super } : super
       end
 
       def get_commands(table_name = nil)
