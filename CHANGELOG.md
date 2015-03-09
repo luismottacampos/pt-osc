@@ -1,3 +1,7 @@
+## 0.2.4
+
+- relaxed version requirements for bundler and activerecord-import
+
 ## 0.2.3
 
 - a warning will be issued if an `ALTER` command is called outside of a PtOscMigration
