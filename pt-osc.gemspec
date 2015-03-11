@@ -7,7 +7,8 @@ Gem::Specification.new do |spec|
   spec.name          = 'pt-osc'
   spec.version       = Pt::Osc::VERSION
   spec.authors       = ['Steve Rice']
-  spec.email         = ['steve@pagerduty.com']
+  spec.email         = ['steve@steverice.org']
+  spec.license       = 'MIT'
   spec.summary       = 'Rails migrations via pt-online-schema-change'
   spec.description   = 'Runs regular Rails/ActiveRecord migrations via the Percona Toolkit pt-online-schema-change tool.'
   spec.homepage      = 'https://github.com/steverice/pt-osc'
