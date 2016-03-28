@@ -30,5 +30,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'activerecord-import', '>= 0.5.0'
 
   spec.add_runtime_dependency 'activerecord', '~> 3.2'
-  spec.add_runtime_dependency 'mysql2'
+  spec.add_runtime_dependency 'mysql2', '~> 0.3.10'
 end
