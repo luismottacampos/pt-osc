@@ -38,6 +38,22 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
           ActiveRecord::Base.connection.execute "DROP TABLE IF EXISTS `#{@table_name}`;"
         end
 
+        context 'a raw SQL execute migration' do
+          setup do
+            TestMigration.class_eval <<-EVAL
+            def up
+              execute 'SELECT 1'
+            end
+            EVAL
+          end
+
+          should 'throw an exception' do
+            assert_raise ActiveRecord::UnsupportedMigrationError do
+              @migration.migrate(:up)
+            end
+          end
+        end
+
         context 'a migration with only ALTER statements' do
           setup do
             @renamed_column_name = 'foobar'

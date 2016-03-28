@@ -3,6 +3,8 @@ require 'active_record/connection_adapters/mysql_pt_osc_adapter'
 require 'shellwords'
 
 module ActiveRecord
+  class UnsupportedMigrationError < ActiveRecordError; end
+
   class PtOscMigration < Migration
     # @TODO whitelist all valid pt-osc flags
     PERCONA_FLAGS = {
@@ -262,6 +264,10 @@ module ActiveRecord
       else
         flag
       end
+    end
+
+    def execute(sql)
+      raise ActiveRecord::UnsupportedMigrationError.new("Raw `execute` isn't supported by the pt-osc gem.")
     end
   end
 end
