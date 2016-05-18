@@ -4,8 +4,8 @@ require 'shellwords'
 
 module MigratorExtensions
   def record_version_state_after_migrating(version)
-    ActiveRecord::Base.logger.info "Verifying active connections prior to recording version" if ActiveRecord::Base.logger
-    ActiveRecord::Base.verify_active_connections! #Recconect to DB if it's gone away while we were migrating.
+    ActiveRecord::Base.logger.debug 'Verifying active connections prior to recording version' if ActiveRecord::Base.logger
+    ActiveRecord::Base.verify_active_connections! # Reconnect to DB if it's gone away while we were migrating.
     super
   end
 end
