@@ -22,6 +22,8 @@ cache:
   - bundler
   - apt
 bundler_args: --binstubs --retry=5
+before_install:
+  - gem install bundler -v 1.12.4
 before_script:
   - $TRAVIS_BUILD_DIR/test/travisci/install_pt_osc.sh
   - unset RAILS_ENV
