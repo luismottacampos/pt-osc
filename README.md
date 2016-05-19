@@ -67,6 +67,7 @@ This gem is not considered production ready. There will be bugs.
 - 3.2 branch
 
 ###### Ruby
+- Ruby 1.9.3
 - Ruby 2.0.0
 - Ruby 2.1.2
 - Ruby 2.1 latest
