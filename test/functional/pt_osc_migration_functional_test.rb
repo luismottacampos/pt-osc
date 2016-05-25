@@ -45,6 +45,15 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
               execute 'SELECT 1'
             end
             EVAL
+            @migration.expects(:print_pt_osc).never
+            @migration.expects(:execute_pt_osc).never
+            @migration.connection.expects(:execute).never
+          end
+
+          teardown do
+            @migration.unstub(:print_pt_osc)
+            @migration.unstub(:execute_pt_osc)
+            @migration.connection.unstub(:execute)
           end
 
           should 'throw an exception' do
