@@ -179,3 +179,18 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
     end
   end
 end
+
+class PtOscMigrationMigratorFunctionalTest < ActiveRecord::TestCase
+  class TestMigrator < ActiveRecord::Migrator; end
+
+  context 'updating version post migration' do
+    setup do
+      @migrator = TestMigrator.new(nil, nil)
+    end
+
+    should 'verify connections before recording version' do
+      ActiveRecord::Base.connection.raw_connection.close
+      @migrator.send(:record_version_state_after_migrating, 0)
+    end
+  end
+end
