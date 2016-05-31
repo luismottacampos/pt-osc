@@ -1,3 +1,9 @@
+## 0.2.5
+
+- added version requirement to mysql2 gem to keep things from breaking (thanks @taavi!) [#15]
+- prevent potentially dangerous usage of `execute` within a pt-osc (thanks @taavi!) [#16]
+- reconnect to MySQL if connection timed out during pt-osc execution (thanks @jongrieman!) [#17]
+
 ## 0.2.4
 
 - relaxed version requirements for bundler and activerecord-import
