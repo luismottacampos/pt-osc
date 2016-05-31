@@ -3,6 +3,16 @@ require 'active_record/connection_adapters/mysql_pt_osc_adapter'
 require 'shellwords'
 
 module ActiveRecord
+  class Migrator
+    alias_method :record_version_state_after_migrating_without_reconnect, :record_version_state_after_migrating
+
+    def record_version_state_after_migrating(version)
+      ActiveRecord::Base.logger.debug 'Verifying active connections prior to recording version' if ActiveRecord::Base.logger
+      ActiveRecord::Base.verify_active_connections! # Reconnect to DB if it's gone away while we were migrating.
+      record_version_state_after_migrating_without_reconnect(version)
+    end
+  end
+
   class UnsupportedMigrationError < ActiveRecordError; end
 
   class PtOscMigration < Migration
