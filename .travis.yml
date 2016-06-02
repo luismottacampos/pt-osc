@@ -10,6 +10,8 @@ rvm:
   - 2.2
   - ruby-head
 env:
+  - RAILS_VERSION=3.2.22.2
+  - RAILS_VERSION=4.2.6
   global:
     - CODECLIMATE_REPO_TOKEN=0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
   matrix:
@@ -42,3 +44,6 @@ matrix:
     - env: PT_OSC_VERSION=DEVELOPMENT
     - env: PT_OSC_VERSION=1.0.2
     - env: PT_OSC_VERSION=2.0.5
+  exclude:
+    - rvm: 1.9.3
+      env: "RAILS_VERSION=4.2.6"

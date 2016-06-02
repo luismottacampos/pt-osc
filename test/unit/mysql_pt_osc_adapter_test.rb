@@ -41,7 +41,11 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
           table_name = Faker::Lorem.word
           column_name = 'foobar'
           @adapter.add_column(table_name, column_name, :string, default: 0, null: false)
-          assert_equal "ADD `#{column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, table_name).first
+          if Rails.version.to_f > 4.0
+            assert_equal "ADD `#{column_name}` varchar(255) DEFAULT '0' NOT NULL", @adapter.send(:get_commands, table_name).first
+          else
+            assert_equal "ADD `#{column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, table_name).first
+          end
         end
       end
     end
@@ -63,7 +67,11 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
 
           should 'add a CHANGE command to the commands hash' do
             @adapter.change_column(@table_name, @column_name, :string, default: 0, null: false)
-            assert_equal "CHANGE `#{@column_name}` `#{@column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, @table_name).first
+            if Rails.version.to_f > 4.0
+              assert_equal "CHANGE `#{@column_name}` `#{@column_name}` varchar(255) DEFAULT '0' NOT NULL", @adapter.send(:get_commands, @table_name).first
+            else
+              assert_equal "CHANGE `#{@column_name}` `#{@column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, @table_name).first
+            end
           end
         end
       end

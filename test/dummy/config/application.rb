@@ -5,6 +5,8 @@ require 'rails/all'
 Bundler.require(*Rails.groups)
 require 'pt-osc'
 
+require 'protected_attributes' if Rails.version.to_f > 4.0
+
 module Dummy
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.

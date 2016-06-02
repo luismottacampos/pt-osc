@@ -9,8 +9,16 @@ require 'test/unit'
 require 'shoulda'
 require 'faker'
 require 'mocha'
+require 'mocha/test_unit'
 
 Rails.backtrace_cleaner.remove_silencers!
+
+# Rails 3/4 differentiation for TestCase
+if Rails.version.to_f < 4
+  class TestCase < ActiveRecord::TestCase; end
+else
+  class TestCase < ActiveSupport::TestCase; end
+end
 
 def test_spec(key = 'test')
   test_spec = YAML.load_file(Rails.root.join(*%w(.. config database.yml)))[key]
