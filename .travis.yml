@@ -46,4 +46,4 @@ matrix:
     - env: PT_OSC_VERSION=2.0.5
   exclude:
     - rvm: 1.9.3
-      env: "RAILS_VERSION=4.2.6"
+      env: RAILS_VERSION=4.2.6
