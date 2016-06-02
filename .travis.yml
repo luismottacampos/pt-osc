@@ -10,16 +10,23 @@ rvm:
   - 2.2
   - ruby-head
 env:
-  - RAILS_VERSION=3.2.22.2
-  - RAILS_VERSION=4.2.6
   global:
     - CODECLIMATE_REPO_TOKEN=0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
   matrix:
-    - PT_OSC_VERSION=LATEST
-    - PT_OSC_VERSION=DEVELOPMENT
-    - PT_OSC_VERSION=2.2.12
-    - PT_OSC_VERSION=2.2.11
-    - PT_OSC_VERSION=2.1.11
+    env:
+      - RAILS_VERSION=3.2.22.2
+        - PT_OSC_VERSION=LATEST
+        - PT_OSC_VERSION=DEVELOPMENT
+        - PT_OSC_VERSION=2.2.12
+        - PT_OSC_VERSION=2.2.11
+        - PT_OSC_VERSION=2.1.11
+      - RAILS_VERSION=4.2.6
+        - PT_OSC_VERSION=LATEST
+        - PT_OSC_VERSION=DEVELOPMENT
+        - PT_OSC_VERSION=2.2.12
+        - PT_OSC_VERSION=2.2.11
+        - PT_OSC_VERSION=2.1.11
+
 cache:
   - bundler
   - apt
