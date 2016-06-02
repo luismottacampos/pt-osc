@@ -50,4 +50,8 @@ matrix:
     - env: PT_OSC_VERSION=2.0.5
   exclude:
     - rvm: 1.9.3
-      env: RAILS_VERSION=4.2.6
+      env: PT_OSC_VERSION=LATEST        RAILS_VERSION=4.2.6
+      env: PT_OSC_VERSION=DEVELOPMENT   RAILS_VERSION=4.2.6
+      env: PT_OSC_VERSION=2.2.12        RAILS_VERSION=4.2.6
+      env: PT_OSC_VERSION=2.2.11        RAILS_VERSION=4.2.6
+      env: PT_OSC_VERSION=2.1.11        RAILS_VERSION=4.2.6
