@@ -34,6 +34,8 @@ script:
 addons:
   code_climate:
     repo_token: 0b58d4e91bfac6ed6e48b31606f6792598a3a59c27bded19d58ef8406c09f57c
+  hosts:
+    - mysql
 matrix:
   fast_finish: true
   allow_failures:

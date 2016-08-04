@@ -1,0 +1,18 @@
+version: '2'
+services:
+  pt-osc:
+    build: .
+    links:
+      - mysql
+    volumes:
+      - .:/code
+      - ptosc_bundle:/usr/local/bundle
+      - ./docker/pt-online-schema-change.conf:/etc/percona-toolkit/pt-online-schema-change.conf
+    environment:
+      - BUNDLE_PATH=/usr/local/bundle
+  mysql:
+    image: mysql:5.5
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+volumes:
+  ptosc_bundle: {}

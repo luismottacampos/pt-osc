@@ -82,3 +82,37 @@ Support for other versions of these tools is unknown and not guaranteed.
 `pt-osc` requires the use of `pt-online-schema-change` 2.0 or later. Some options may not work with all versions.
 
 `pt-osc` is compatible with versions 0.5.0 and later of [zdennis/activerecord-import](https://github.com/zdennis/activerecord-import). It will not work with earlier versions.
+
+## Testing
+
+create a machine for pt-osc, this should only be needed once
+
+```
+docker-machine create pt-osc --driver virtualbox
+```
+
+every new shell that needs to access pt-osc within docker needs to run:
+
+```
+eval $(docker-machine env pt-osc)
+```
+
+to access the docker shell
+
+```
+docker-compose run pt-osc bash
+```
+
+### useful commands in docker shell
+
+create the initial database within mysql for tests, only needed once
+
+```
+bundle exec rake db:test_create
+```
+
+run the tests in docker
+
+```
+bundle exec rake
+```
