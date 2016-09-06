@@ -1,6 +1,6 @@
 test: &test
   pool: 5
-  host: localhost
+  host: mysql
   username: root
   database: pt_osc_test
   reconnect: true
