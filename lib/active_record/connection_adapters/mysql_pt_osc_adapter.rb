@@ -48,6 +48,7 @@ module ActiveRecord
       # ===== Examples
       #  remove_column(:suppliers, :qualification)
       #  remove_columns(:suppliers, :qualification, :experience)
+      #
       def remove_column(table_name, *column_names)
         if column_names.flatten!
           message = 'Passing array to remove_columns is deprecated, please use ' +
@@ -55,8 +56,8 @@ module ActiveRecord
           ActiveSupport::Deprecation.warn message, caller
         end
 
-        columns_for_remove(table_name, *column_names).each do |column_name|
-          add_command(table_name, "DROP COLUMN #{column_name}")
+        column_names.map do |column_name|
+          add_command(table_name, "DROP COLUMN #{quote_column_name(column_name)}")
         end
       end
 

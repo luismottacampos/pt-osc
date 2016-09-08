@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
+class PtOscMigrationFunctionalTest < TestCase
   class TestMigration < ActiveRecord::PtOscMigration; end
 
   context 'a migration' do
@@ -180,7 +180,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
   end
 end
 
-class PtOscMigrationMigratorFunctionalTest < ActiveRecord::TestCase
+class PtOscMigrationMigratorFunctionalTest < TestCase
   class TestMigrator < ActiveRecord::Migrator; end
 
   context 'updating version post migration' do
