@@ -2,7 +2,8 @@
 set -ox
 
 VERSION=$(lsb_release -c -s)
-sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A
+sudo apt-key adv --keyserver keys.gnupg.net --recv-keys 8507EFA5
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 8507EFA5
 
 # Add the right repository
 case $PT_OSC_VERSION in
@@ -19,12 +20,12 @@ case $PT_OSC_VERSION in
   2.2.*)
     wget http://www.percona.com/downloads/percona-toolkit/"$PT_OSC_VERSION"/deb/percona-toolkit_"$PT_OSC_VERSION"_all.deb
     sudo dpkg -i percona-toolkit_"$PT_OSC_VERSION"_all.deb
-    sudo apt-get install -f -y
+    sudo apt-get install -f
     ;;
   *)
     wget http://www.percona.com/downloads/percona-toolkit/"$PT_OSC_VERSION"/percona-toolkit_"$PT_OSC_VERSION"_all.deb
     sudo dpkg -i percona-toolkit_"$PT_OSC_VERSION"_all.deb
-    sudo apt-get install -f -y
+    sudo apt-get install -f
     ;;
 esac
 

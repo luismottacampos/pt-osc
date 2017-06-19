@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class MysqlPtOscAdapterTest < Test::Unit::TestCase
+class MysqlPtOscAdapterTest < ActiveSupport::TestCase
   class TestConnection < ActiveRecord::Base; end
 
   context 'a pt-osc adapter' do
@@ -41,7 +41,14 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
           table_name = Faker::Lorem.word
           column_name = 'foobar'
           @adapter.add_column(table_name, column_name, :string, default: 0, null: false)
-          assert_equal "ADD `#{column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, table_name).first
+          if defined?(ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter::MysqlString)
+            sql_type = ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter::MysqlString.new
+          else
+            sql_type = 'string'
+          end
+          column = ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter::Column.new(column_name, 0, sql_type)
+          default_value = @adapter.quote(0, column)
+          assert_equal "ADD `#{column_name}` varchar(255) DEFAULT #{default_value} NOT NULL", @adapter.send(:get_commands, table_name).first
         end
       end
     end
@@ -63,7 +70,8 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
 
           should 'add a CHANGE command to the commands hash' do
             @adapter.change_column(@table_name, @column_name, :string, default: 0, null: false)
-            assert_equal "CHANGE `#{@column_name}` `#{@column_name}` varchar(255) DEFAULT 0 NOT NULL", @adapter.send(:get_commands, @table_name).first
+            default_value = @adapter.quote(0, @adapter.columns(@table_name).detect{|c| c.name == @column_name })
+            assert_equal "CHANGE `#{@column_name}` `#{@column_name}` varchar(255) DEFAULT #{default_value} NOT NULL", @adapter.send(:get_commands, @table_name).first
           end
         end
       end

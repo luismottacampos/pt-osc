@@ -55,8 +55,8 @@ module ActiveRecord
           ActiveSupport::Deprecation.warn message, caller
         end
 
-        columns_for_remove(table_name, *column_names).each do |column_name|
-          add_command(table_name, "DROP COLUMN #{column_name}")
+        column_names.each do |column_name|
+          add_command(table_name, "DROP COLUMN #{quote_column_name(column_name)}")
         end
       end
 

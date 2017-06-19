@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'yaml'
 
-class MysqlPtOscAdapterTest < Test::Unit::TestCase
+class MysqlPtOscAdapterTest < ActiveSupport::TestCase
   class TestConnection < ActiveRecord::Base; end
   class TestArMigration < ActiveRecord::Migration; end
   class TestPtOscMigration < ActiveRecord::PtOscMigration; end
@@ -12,7 +12,7 @@ class MysqlPtOscAdapterTest < Test::Unit::TestCase
     spec.delete('database') # We don't care whether the database exists
 
     assert_nothing_raised { TestConnection.establish_connection(spec) }
-    assert_equal true, TestConnection.connection.in_use
+    assert_equal true, TestConnection.connection.active?
     assert_kind_of ActiveRecord::ConnectionAdapters::MysqlPtOscAdapter, TestConnection.connection
   end
 
