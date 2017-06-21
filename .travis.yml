@@ -48,6 +48,7 @@ matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: 2.2
+    - rvm: 1.9.3
     - env: PT_OSC_VERSION=DEVELOPMENT
     - env: PT_OSC_VERSION=1.0.2
     - env: PT_OSC_VERSION=2.0.5
