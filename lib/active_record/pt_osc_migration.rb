@@ -12,7 +12,7 @@ module ActiveRecord
       if ActiveRecord::VERSION::MAJOR < 4
         ActiveRecord::Base.verify_active_connections! #Recconect to DB if it's gone away while we were migrating.
       else
-        ActiveRecord::Base.clear_active_connections!
+        ::ActiveRecord::Base.connection_pool.connections.map(&:verify!)
       end
       record_version_state_after_migrating_without_reconnect(version)
     end
