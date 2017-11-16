@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PtOscMigrationIntegrationTest < ActiveRecord::TestCase
+class PtOscMigrationIntegrationTest < ActiveSupport::TestCase
   class TestMigration < ActiveRecord::PtOscMigration; end
 
   context 'a migration' do

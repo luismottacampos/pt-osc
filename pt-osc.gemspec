@@ -25,10 +25,11 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'mocha', '>= 0.9.0'
 
   # For testing using dummy Rails app
-  spec.add_development_dependency 'rails', '~> 3.2'
+  spec.add_development_dependency 'rails', '>= 3.2', '< 5.0'
   spec.add_development_dependency 'sqlite3'
+  spec.add_development_dependency 'minitest-stub_any_instance'
   spec.add_development_dependency 'activerecord-import', '>= 0.5.0'
 
-  spec.add_runtime_dependency 'activerecord', '~> 3.2'
+  spec.add_runtime_dependency 'activerecord', '>= 3.2', '< 5.0'
   spec.add_runtime_dependency 'mysql2', '~> 0.3.10'
 end

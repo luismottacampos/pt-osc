@@ -1,14 +1,20 @@
-require 'codeclimate-test-reporter'
-CodeClimate::TestReporter.start
+if ENV['RUBY_COVERAGE'] == '1'
+  require 'simplecov'
+  require 'codeclimate-test-reporter'
+  SimpleCov.start CodeClimate::TestReporter.configuration.profile
+end
 
 # Configure Rails Environment
 ENV['RAILS_ENV'] = 'test'
 
 require File.expand_path('../dummy/config/environment.rb',  __FILE__)
-require 'test/unit'
+require 'active_record'
+require 'minitest/autorun'
+require 'minitest/stub_any_instance'
 require 'shoulda'
 require 'faker'
 require 'mocha'
+require 'mocha/mini_test'
 
 Rails.backtrace_cleaner.remove_silencers!
 
@@ -33,7 +39,11 @@ def migrate_and_test_field(command, migration, table_name, field_name, assertion
     assert_not_nil field
     assert_equal field_name, field.name
     assertions.each do |test, expected|
-      actual = field.send(test)
+      if test == :default && field.respond_to?(:type_cast_from_database)
+        actual = field.type_cast_from_database(field.default)
+      else
+        actual = field.send(test)
+      end
       assert_equal expected, actual, "Expected #{command} to produce a field of #{test} #{expected}, but it was #{actual}"
     end
   end
@@ -52,15 +62,19 @@ def add_column_fixtures
   rails_time_value = Time.utc(base_date.year, base_date.month, base_date.day, datetime_value.hour, datetime_value.min, datetime_value.sec)
 
   fixtures = [
-    { type: :integer, default: 42 },
+    # UPGRADE integer is no longer cast to type
+    #https://github.com/rails/rails/commit/4d3e88fc757a1b6f6c468418af01dca677e41edf
+    { type: :integer, default: 42, expected_default: 42 },
     { type: :string, default: ['foobar', :bazqux], expected_default: ['foobar', 'bazqux'] },
     { type: :text, default: nil }, # TEXT columns cannot have a default http://dev.mysql.com/doc/refman/5.7/en/blob.html#idm140380410069472
-    { type: :float, default: 3.14159 },
+    # UPGRADE integer is no longer cast to type
+    #https://github.com/rails/rails/commit/4d3e88fc757a1b6f6c468418af01dca677e41edf
+    { type: :float, default: 3.14159, expected_default: 3.14159},
     { type: :datetime, default: datetime_value.strftime('%F %T'), expected_default: datetime_value },
     { type: :time, default: datetime_value.strftime('%T'), expected_default: rails_time_value },
     { type: :date, default: datetime_value.strftime('%F'), expected_default: date_value },
     { type: :binary, default: nil }, # BLOB columns cannot have a default http://dev.mysql.com/doc/refman/5.7/en/blob.html#idm140380410069472
-    { type: :boolean, default: [false, true] },
+    { type: :boolean, default: [false, true], expected_default: [false, true] }
   ]
   fixtures.map do |fixture|
     fixture[:command] = "add_column :%{table}, :%{column}, :#{fixture[:type]}, default: %<default>p, null: %{nullable}"
@@ -88,6 +102,10 @@ module ActiveRecord
       @ignore   = ignore
     end
 
+    def self.clear_log
+      self.log = []
+    end
+
     def call(name, start, finish, message_id, values)
       sql = values[:sql]
 
@@ -99,4 +117,34 @@ module ActiveRecord
   end
 
   ActiveSupport::Notifications.subscribe('sql.active_record', SQLCounter.new)
+end
+
+module Kernel
+  def quietly_with_deprecation_silenced(&block)
+    ActiveSupport::Deprecation.silence do
+      quietly_without_deprecation_silenced(&block)
+    end
+  end
+  alias_method_chain :quietly, :deprecation_silenced
+end
+
+# UPGRADE
+# Assert queries was removed as of rails 4.0.2
+class ActiveSupport::TestCase
+  def assert_no_queries(&block)
+    assert_queries(0, :ignore_none => true, &block)
+  end
+  def assert_queries(num = 1, options = {})
+    ignore_none = options.fetch(:ignore_none) { num == :any }
+    ActiveRecord::SQLCounter.clear_log
+    yield
+  ensure
+    the_log = ActiveRecord::SQLCounter.log
+    if num == :any
+      assert_operator the_log.size, :>=, 1, "1 or more queries expected, but none were executed."
+    else
+      mesg = "#{the_log.size} instead of #{num} queries were executed.#{the_log.size == 0 ? '' : "\nQueries:\n#{the_log.join("\n")}"}"
+      assert_equal num, the_log.size, mesg
+    end
+  end
 end

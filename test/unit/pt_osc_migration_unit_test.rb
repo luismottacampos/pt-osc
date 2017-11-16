@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PtOscMigrationUnitTest < Test::Unit::TestCase
+class PtOscMigrationUnitTest < ActiveSupport::TestCase
   context 'with a pt-osc migration' do
     setup do
       @migration = ActiveRecord::PtOscMigration.new
