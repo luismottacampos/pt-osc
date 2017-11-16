@@ -8,7 +8,12 @@ module ActiveRecord
 
     def record_version_state_after_migrating(version)
       ActiveRecord::Base.logger.debug 'Verifying active connections prior to recording version' if ActiveRecord::Base.logger
-      ActiveRecord::Base.verify_active_connections! # Reconnect to DB if it's gone away while we were migrating.
+      # https://github.com/rails/rails/commit/9d1f1b1ea9e5d637984fda4f276db77ffd1dbdcb
+      if ActiveRecord::VERSION::MAJOR < 4
+        ActiveRecord::Base.verify_active_connections! #Recconect to DB if it's gone away while we were migrating.
+      else
+        ::ActiveRecord::Base.connection_pool.connections.map(&:verify!)
+      end
       record_version_state_after_migrating_without_reconnect(version)
     end
   end

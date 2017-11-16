@@ -4,6 +4,7 @@ test: &test
   username: root
   database: pt_osc_test
   reconnect: true
+  adapter: mysql2
 
 test_print:
   <<: *test
