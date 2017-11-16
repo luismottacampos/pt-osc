@@ -3,6 +3,8 @@ branches:
     - master
 language: ruby
 sudo: required
+service:
+  - mysql
 rvm:
   - 1.9.3
   - 2.0.0
