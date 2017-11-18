@@ -8,6 +8,9 @@
 
 Runs regular Rails/ActiveRecord migrations via the [Percona Toolkit pt-online-schema-change tool](http://www.percona.com/doc/percona-toolkit/2.1/pt-online-schema-change.html).
 
+    WARNING: I am not actively contributing this project any more.
+    PRs to fix bugs and add features are welcome, but do not expect feature requests to go answered.
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -64,7 +67,9 @@ This gem is not considered production ready. There will be bugs.
 ##### Requirements and Compatibility
 
 ###### ActiveRecord
-- 3.2 branch
+- ~> 3.2
+- ~> 3.2
+
 
 ###### Ruby
 - Ruby 1.9.3
