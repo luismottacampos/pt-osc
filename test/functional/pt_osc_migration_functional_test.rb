@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
+class PtOscMigrationFunctionalTest < ActiveSupport::TestCase
   class TestMigration < ActiveRecord::PtOscMigration; end
 
   context 'a migration' do
@@ -107,6 +107,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
                   /^SHOW FULL FIELDS FROM/,
                   /^SHOW COLUMNS FROM/,
                   /^SHOW KEYS FROM/,
+                  /^SHOW TABLES LIKE/
                 ]
                 ActiveRecord::SQLCounter.any_instance.stubs(:ignore).returns(ignored_sql)
               end
@@ -116,7 +117,7 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
               end
 
               should 'not execute any queries immediately' do
-                assert_no_queries { @migration.change }
+                assert_no_queries { @migration.migrate(:up) }
               end
 
               context 'with a working pt-online-schema-change' do
@@ -180,12 +181,12 @@ class PtOscMigrationFunctionalTest < ActiveRecord::TestCase
   end
 end
 
-class PtOscMigrationMigratorFunctionalTest < ActiveRecord::TestCase
+class PtOscMigrationMigratorFunctionalTest < ActiveSupport::TestCase
   class TestMigrator < ActiveRecord::Migrator; end
 
   context 'updating version post migration' do
     setup do
-      @migrator = TestMigrator.new(nil, nil)
+      @migrator = TestMigrator.new(nil, [])
     end
 
     should 'verify connections before recording version' do
